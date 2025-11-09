@@ -30,6 +30,7 @@ with
             and s.hometm = case when r.at_symbol = '@' then r.loser else r.winner end
             and s.vistm = case when r.at_symbol = '@' then r.winner else r.loser end
         where r.winner is not null and r.loser is not null
+            and r.season = 2025  -- Only include current season to avoid game_id collisions
     ),
     cte_outer as (
         select
