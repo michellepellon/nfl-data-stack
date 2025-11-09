@@ -81,19 +81,23 @@ def generate_full_webpage_data():
         print(f"Warning: Could not load calibration data: {e}")
         data["calibration"] = []
 
-    # Get performance by week
+    # Get performance by week (exclude current week since games haven't been played)
     try:
         performance_df = pd.read_parquet(data_dir / "nfl_model_performance.parquet")
+        current_week = data["current_week"]
         performance_records = []
         for _, row in performance_df.iterrows():
-            brier = float(row['brier_score'])
-            performance_records.append({
-                'week_number': int(row['week_number']),
-                'brier_score': brier,
-                'log_loss': float(row['log_loss']),
-                'accuracy': float(row['accuracy']),
-                'performance_rating': 'Excellent' if brier < 0.20 else 'Good' if brier < 0.25 else 'Fair' if brier < 0.30 else 'Needs improvement'
-            })
+            week_num = int(row['week_number'])
+            # Only include completed weeks
+            if week_num < current_week:
+                brier = float(row['brier_score'])
+                performance_records.append({
+                    'week_number': week_num,
+                    'brier_score': brier,
+                    'log_loss': float(row['log_loss']),
+                    'accuracy': float(row['accuracy']),
+                    'performance_rating': 'Excellent' if brier < 0.20 else 'Good' if brier < 0.25 else 'Fair' if brier < 0.30 else 'Needs improvement'
+                })
         data["performance"] = sorted(performance_records, key=lambda x: x['week_number'])
     except Exception as e:
         print(f"Warning: Could not load performance data: {e}")
