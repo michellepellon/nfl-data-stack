@@ -13,15 +13,52 @@ import pandas as pd
 import json
 from pathlib import Path
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+
+def calculate_current_week() -> int:
+    """
+    Automatically calculate the current NFL week based on date.
+
+    NFL 2025 season structure:
+    - Week 1 starts: September 4, 2025 (Thursday)
+    - Regular season: Weeks 1-18
+    - Each week runs Thu-Mon
+
+    Returns:
+        Current NFL week number (1-18)
+    """
+    eastern = ZoneInfo("America/New_York")
+    now = datetime.now(eastern)
+
+    # NFL 2025 Week 1 starts September 4, 2025
+    season_start = datetime(2025, 9, 4, tzinfo=eastern)
+
+    if now < season_start:
+        # Before season starts, return week 1
+        return 1
+
+    # Calculate days since season start
+    days_since_start = (now - season_start).days
+
+    # NFL weeks run Thursday-Monday (7 days)
+    # Add 1 because week counting starts at 1
+    week = (days_since_start // 7) + 1
+
+    # Cap at week 18 (regular season ends)
+    return min(week, 18)
 
 
 def generate_full_webpage_data():
     """Generate complete JSON data for the static webpage"""
     data_dir = Path(__file__).parent.parent / "data" / "data_catalog"
 
+    # Auto-detect current week
+    current_week = calculate_current_week()
+
     data = {
         "generated_at": datetime.now().isoformat(),
-        "current_week": 10,
+        "current_week": current_week,
     }
 
     # Get current team ratings
@@ -29,15 +66,15 @@ def generate_full_webpage_data():
     ratings_df = ratings_df.sort_values('elo_rating', ascending=False)
     data["ratings"] = ratings_df[['team', 'conf', 'division', 'elo_rating', 'win_total']].to_dict('records')
 
-    # Get Week 10 predictions from simulator
+    # Get predictions for current week from simulator
     sim_df = pd.read_parquet(data_dir / "nfl_reg_season_simulator.parquet")
-    week10_df = sim_df[sim_df['week_number'] == 10].copy()
+    current_week_df = sim_df[sim_df['week_number'] == current_week].copy()
 
     # Group by game and calculate win probability (convert from basis points)
-    week10_games = []
-    for game_id in week10_df['game_id'].unique():
-        game_data = week10_df[week10_df['game_id'] == game_id].iloc[0]
-        week10_games.append({
+    current_week_games = []
+    for game_id in current_week_df['game_id'].unique():
+        game_data = current_week_df[current_week_df['game_id'] == game_id].iloc[0]
+        current_week_games.append({
             'game_id': int(game_data['game_id']),
             'week_number': int(game_data['week_number']),
             'visiting_team': game_data['visiting_team'],
@@ -54,7 +91,8 @@ def generate_full_webpage_data():
             'confidence_adjusted': abs((float(game_data['home_team_win_probability']) / 10000.0) - 0.5)
         })
 
-    data["week10_predictions"] = sorted(week10_games, key=lambda x: x['game_id'])
+    # Store predictions with dynamic key
+    data["predictions"] = sorted(current_week_games, key=lambda x: x['game_id'])
 
     # Get calibration data
     try:
@@ -156,24 +194,23 @@ def main():
     with open(output_path, 'w') as f:
         json.dump(data, f, indent=2)
 
+    current_week = data['current_week']
     print(f"\n✓ Generated webpage data at {output_path}")
     print(f"\nData Summary:")
-    print(f"  Current Week: {data['current_week']}")
+    print(f"  Current Week: {current_week}")
     print(f"  Teams: {len(data['ratings'])}")
-    print(f"  Week 10 Predictions: {len(data['week10_predictions'])}")
+    print(f"  Week {current_week} Predictions: {len(data['predictions'])}")
     print(f"  Calibration Bins: {len(data['calibration'])}")
     print(f"  Performance Weeks: {len(data['performance'])}")
     print(f"  Playoff Teams: {len(data['playoffs'])}")
 
-    # Show Seahawks vs Cardinals prediction
-    seahawks_game = [g for g in data['week10_predictions'] if g['home_team'] == 'Seattle Seahawks' and g['visiting_team'] == 'Arizona Cardinals']
-    if seahawks_game:
-        sample = seahawks_game[0]
-        print(f"\n📊 Seahawks vs Cardinals (FIXED):")
+    # Show sample prediction
+    if data['predictions']:
+        sample = data['predictions'][0]
+        print(f"\n📊 Sample prediction (Week {current_week}):")
         print(f"  {sample['visiting_team']} @ {sample['home_team']}")
         print(f"  ELO: {sample['visiting_team_elo_rating']:.0f} vs {sample['home_team_elo_rating']:.0f}")
         print(f"  Home win prob: {sample['home_win_probability']:.1%}")
-        print(f"  ✅ Seahawks correctly favored at home!")
 
 
 if __name__ == "__main__":
