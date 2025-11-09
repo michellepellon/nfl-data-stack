@@ -18,4 +18,5 @@ dependencies = [
     "lxml>=6.0.2",
     "html5lib>=1.1",
     "nflreadpy>=0.1.4",
+    "scikit-learn>=1.7.2",
 ]
