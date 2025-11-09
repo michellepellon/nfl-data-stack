@@ -1,0 +1,6 @@
+# Source: NFL Weekly Summary
+# High-level weekly prediction statistics and insights
+
+type: source
+connector: duckdb
+sql: SELECT * FROM read_parquet('../data/data_catalog/nfl_weekly_summary.parquet')

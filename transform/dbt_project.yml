@@ -1,0 +1,57 @@
+name: sports_sims
+version: '1.0'
+profile: default
+config-version: 2
+require-dbt-version: [">=1.0.0", "<2.0.0"]
+model-paths:
+- models
+analysis-paths:
+- analysis
+test-paths:
+- tests
+seed-paths:
+- data
+macro-paths:
+- macros
+snapshot-paths:
+- snapshots
+target-path: ../docs
+log-path: logs
+packages-install-path: dbt_packages
+clean-targets:
+- ../docs
+- dbt_packages
+- logs
+models:
+  sports_sims:
+    nfl:
+      +tags: nfl
+      # Bronze layer: raw ingestion (external Parquet)
+      raw:
+        +materialized: external
+        +format: parquet
+      # Silver layer: transformed data (external Parquet)
+      prep:
+        +materialized: external
+        +format: parquet
+      simulator:
+        +materialized: external
+        +format: parquet
+      # Gold layer: analytics views (DuckDB views for fast queries)
+      analysis:
+        +materialized: view
+
+vars:
+  scenarios: 10000            # set number of scenarios. 100k is safe on 8GB of RAM
+  include_actuals: true       # set to true to use actual game results, otherwise sim entire season
+  latest_ratings: true        # set to true to use latest ELO ratings, otherwise use start of season ratings
+  sim_start_game_id: 0        # placeholder one multi-container is in place
+  nfl_elo_offset: 52          # nfl offset to ELO to get to 7.5% home advantage
+  ncaaf_elo_offset: 52        # ncaaf offset to ELO to get to 7.5% home advantage
+  random_seed: 42             # seed for reproducible random number generation
+  enable_profiling: false     # enable DuckDB EXPLAIN ANALYZE profiling
+  elo_k_factor: 20            # ELO K-factor (learning rate) for rating updates
+
+# external files are only registered as DuckDB views when they are created, not when they are referenced.
+on-run-start:
+  - "{{ register_upstream_external_models() }}"

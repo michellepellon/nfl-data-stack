@@ -1,0 +1,105 @@
+# NFL Weekly Picks Dashboard
+# Clean, Tufte-style presentation organized by confidence tier
+
+type: metrics_view
+model: nfl_weekly_picks
+
+timeseries: ingested_at
+
+dimensions:
+  - name: week
+    label: Week
+    column: week_number
+    description: NFL week number
+
+  - name: confidence_tier
+    label: Confidence Level
+    column: confidence_tier
+    description: Prediction confidence grouping
+
+  - name: matchup
+    label: Matchup
+    column: matchup
+    description: "Predicted winner over/@ loser"
+
+  - name: predicted_winner
+    label: Predicted Winner
+    column: predicted_winner
+    description: Team predicted to win
+
+  - name: predicted_winner_short
+    label: Winner
+    column: predicted_winner_short
+    description: Predicted winner abbreviation
+
+  - name: predicted_loser_short
+    label: Loser
+    column: predicted_loser_short
+    description: Predicted loser abbreviation
+
+  - name: home_team
+    label: Home Team
+    column: home_team
+    description: Home team
+
+  - name: visiting_team
+    label: Visiting Team
+    column: visiting_team
+    description: Visiting team
+
+  - name: game_notes
+    label: Notes
+    column: game_notes
+    description: Game context notes
+
+  - name: is_upset
+    label: Upset Pick
+    column: is_upset
+    description: Picking underdog to win
+
+  - name: adjustment_impact
+    label: Feature Impact
+    column: adjustment_impact
+    description: How much features changed the prediction
+
+measures:
+  - name: win_probability
+    label: Win Probability
+    expression: AVG(winner_probability)
+    description: Probability the predicted winner wins
+    format_preset: percentage
+
+  - name: home_win_prob
+    label: Home Win %
+    expression: AVG(home_win_prob_adjusted)
+    description: Home team win probability
+    format_preset: percentage
+
+  - name: elo_difference
+    label: ELO Diff
+    expression: AVG(elo_diff)
+    description: Home ELO minus visiting ELO
+    format_preset: humanize
+
+  - name: total_adjustment
+    label: Feature Adjustment
+    expression: AVG(total_adj)
+    description: Total ELO adjustment from features
+    format_preset: humanize
+
+  - name: injury_adjustment
+    label: Injury Impact
+    expression: AVG(injury_adj)
+    description: ELO adjustment from injuries
+    format_preset: humanize
+
+  - name: game_count
+    label: Games
+    expression: COUNT(DISTINCT game_id)
+    description: Number of games
+
+available_time_zones:
+  - America/New_York
+  - America/Chicago
+  - America/Denver
+  - America/Los_Angeles

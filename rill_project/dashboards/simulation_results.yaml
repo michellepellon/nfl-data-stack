@@ -1,0 +1,61 @@
+# Dashboard: Monte Carlo Simulation Results
+# Game-by-game probabilities and outcomes across all scenarios
+
+type: metrics_view
+table: nfl_reg_season_simulator
+
+timeseries: ingested_at
+
+dimensions:
+  - name: scenario
+    label: Scenario ID
+    column: scenario_id
+    description: Monte Carlo scenario identifier (1-10,000)
+
+  - name: home_team
+    label: Home Team
+    column: home_team
+    description: Home team name
+
+  - name: visiting_team
+    label: Visiting Team
+    column: visiting_team
+    description: Visiting team name
+
+  - name: winner
+    label: Winning Team
+    column: winning_team
+    description: Team that won the game
+
+  - name: game_type
+    label: Game Type
+    column: type
+    description: Regular season or playoff round
+
+measures:
+  - name: total_games
+    label: Total Games
+    expression: COUNT(*)
+    description: Total number of game simulations
+
+  - name: home_win_probability
+    label: Home Win %
+    expression: AVG(home_team_win_probability) / 100.0
+    description: Average home team win probability
+    format_preset: percentage
+
+  - name: home_wins
+    label: Home Wins
+    expression: SUM(CASE WHEN winning_team = home_team THEN 1 ELSE 0 END)
+    description: Count of home team victories
+
+  - name: away_wins
+    label: Away Wins
+    expression: SUM(CASE WHEN winning_team = visiting_team THEN 1 ELSE 0 END)
+    description: Count of visiting team victories
+
+  - name: home_win_rate
+    label: Home Win Rate
+    expression: SUM(CASE WHEN winning_team = home_team THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+    description: Percentage of games won by home team
+    format_preset: percentage

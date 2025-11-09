@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# dbt
+target/
+dbt_packages/
+logs/
+docs/catalog.json
+docs/manifest.json
+docs/run_results.json
+docs/graph.gpickle
+docs/graph_summary.json
+docs/index.html
+docs/partial_parse.msgpack
+docs/semantic_manifest.json
+docs/compiled/
+docs/run/
+
+# Rill
+rill_project/tmp/
+rill_project/.rill/
+
+# Data outputs (parquet files are generated, not source)
+data/data_catalog/*.parquet
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# AI Coding Tools
+.claude/

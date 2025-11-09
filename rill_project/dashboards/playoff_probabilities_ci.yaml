@@ -1,0 +1,122 @@
+# Dashboard: NFL Playoff Probabilities with Confidence Intervals
+# Shows playoff probabilities with 95% Wilson score confidence intervals
+# Provides statistical rigor to Monte Carlo simulation results
+
+type: metrics_view
+model: nfl_playoff_probabilities_ci
+
+timeseries: ingested_at
+
+dimensions:
+  - name: team
+    label: Team
+    column: team
+    description: NFL team name
+
+  - name: conference
+    label: Conference
+    column: conf
+    description: AFC or NFC
+
+measures:
+  # Playoff probability
+  - name: playoff_probability
+    label: Playoff Probability
+    expression: AVG(playoff_prob_pct)
+    description: Point estimate of playoff probability (%)
+    format_preset: humanize
+
+  - name: playoff_ci_lower
+    label: Playoff CI Lower
+    expression: AVG(playoff_ci_lower_pct)
+    description: Lower bound of 95% confidence interval
+    format_preset: humanize
+
+  - name: playoff_ci_upper
+    label: Playoff CI Upper
+    expression: AVG(playoff_ci_upper_pct)
+    description: Upper bound of 95% confidence interval
+    format_preset: humanize
+
+  - name: playoff_ci_width
+    label: Playoff CI Width
+    expression: AVG(playoff_ci_width_pct)
+    description: Width of 95% CI (uncertainty measure)
+    format_preset: humanize
+
+  # First round bye probability
+  - name: bye_probability
+    label: First Round Bye Probability
+    expression: AVG(bye_prob_pct)
+    description: Point estimate of first round bye probability (%)
+    format_preset: humanize
+
+  - name: bye_ci_lower
+    label: Bye CI Lower
+    expression: AVG(bye_ci_lower_pct)
+    description: Lower bound of 95% CI for bye
+    format_preset: humanize
+
+  - name: bye_ci_upper
+    label: Bye CI Upper
+    expression: AVG(bye_ci_upper_pct)
+    description: Upper bound of 95% CI for bye
+    format_preset: humanize
+
+  # Win projections
+  - name: projected_wins
+    label: Projected Wins
+    expression: AVG(avg_wins)
+    description: Average wins across Monte Carlo scenarios
+    format_preset: humanize
+
+  - name: wins_ci_lower
+    label: Wins CI Lower
+    expression: AVG(wins_ci_lower)
+    description: Lower bound of 95% CI for wins
+    format_preset: humanize
+
+  - name: wins_ci_upper
+    label: Wins CI Upper
+    expression: AVG(wins_ci_upper)
+    description: Upper bound of 95% CI for wins
+    format_preset: humanize
+
+  - name: wins_ci_width
+    label: Wins CI Width
+    expression: AVG(wins_ci_width)
+    description: Width of 95% CI for wins (variance measure)
+    format_preset: humanize
+
+  # Seed projections
+  - name: avg_seed
+    label: Average Playoff Seed
+    expression: AVG(avg_seed)
+    description: Average conference seed across scenarios
+    format_preset: humanize
+
+  - name: seed_ci_lower
+    label: Seed CI Lower
+    expression: AVG(seed_ci_lower)
+    description: Lower bound of 95% CI for seed
+    format_preset: humanize
+
+  - name: seed_ci_upper
+    label: Seed CI Upper
+    expression: AVG(seed_ci_upper)
+    description: Upper bound of 95% CI for seed
+    format_preset: humanize
+
+  # ELO rating
+  - name: elo
+    label: ELO Rating
+    expression: AVG(elo_rating)
+    description: Current ELO rating
+    format_preset: humanize
+
+  # Scenario count
+  - name: scenarios
+    label: Scenarios
+    expression: AVG(n_scenarios)
+    description: Number of Monte Carlo scenarios
+    format_preset: humanize

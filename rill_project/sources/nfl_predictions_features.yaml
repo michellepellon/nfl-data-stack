@@ -1,0 +1,6 @@
+# Source: NFL Predictions with Feature Adjustments
+# Enhanced predictions combining ELO ratings with contextual features
+
+type: source
+connector: duckdb
+sql: SELECT * FROM read_parquet('../data/data_catalog/nfl_predictions_with_features.parquet')

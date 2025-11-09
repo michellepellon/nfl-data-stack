@@ -1,0 +1,27 @@
+version: 2
+
+sources:
+  - name: nfl
+    schema: psa
+    meta:
+      external_location: ../data/nfl/{identifier}.csv
+    tables:
+      - name: nfl_schedule
+        description: nfl schedule
+      - name: nfl_team_ratings
+        description: nfl team ratings from vegas
+      - name: nfl_results
+        description: nfl results for the current season
+      - name: nfl_enhanced_features
+        description: enhanced features (rest days, weather, injuries) from nflreadpy
+  - name: ncaaf
+    schema: psa
+    meta:
+      external_location: ../data/ncaaf/{identifier}.csv
+    tables:
+      - name: ncaaf_schedule
+        description: ncaa football schedule
+      - name: ncaaf_team_ratings
+        description: ncaa football team ratings from vegas
+      - name: ncaaf_results
+        description: ncaa results for current season

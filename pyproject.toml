@@ -1,0 +1,21 @@
+[project]
+name = "nfl-data-stack"
+version = "0.1.0"
+description = "NFL analytics and Monte Carlo simulator"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dbt-core>=1.10.0,<1.11.0",
+    "dbt-duckdb",
+    "dlt[filesystem]",
+    "duckdb~=1.3.0",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "shandy-sqlfmt[jinjafmt]",
+    "sqlmesh==0.88",
+    "polars",
+    "lxml>=6.0.2",
+    "html5lib>=1.1",
+    "nflreadpy>=0.1.4",
+]

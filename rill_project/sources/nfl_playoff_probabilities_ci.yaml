@@ -1,0 +1,6 @@
+# Source: NFL Playoff Probabilities with Confidence Intervals
+# Provides playoff probabilities with 95% Wilson score confidence intervals
+
+type: source
+connector: duckdb
+sql: SELECT * FROM read_parquet('../data/data_catalog/nfl_playoff_probabilities_ci.parquet')

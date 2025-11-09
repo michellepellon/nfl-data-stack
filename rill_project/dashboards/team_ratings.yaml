@@ -1,0 +1,53 @@
+# Dashboard: NFL Team Ratings
+# ELO ratings, Vegas projections, and team comparisons
+
+type: metrics_view
+table: nfl_ratings
+
+timeseries: ingested_at
+
+dimensions:
+  - name: team
+    label: Team
+    column: team
+    description: NFL team name
+
+  - name: conference
+    label: Conference
+    column: conf
+    description: AFC or NFC
+
+  - name: division
+    label: Division
+    column: division
+    description: NFL division (e.g., AFC East, NFC West)
+
+measures:
+  - name: elo_rating
+    label: ELO Rating
+    expression: AVG(elo_rating)
+    description: Current ELO rating (higher is better)
+    format_preset: humanize
+
+  - name: original_elo
+    label: Start of Season ELO
+    expression: AVG(original_rating)
+    description: ELO rating at start of season
+    format_preset: humanize
+
+  - name: elo_change
+    label: ELO Change
+    expression: AVG(elo_rating - original_rating)
+    description: Change in ELO from start of season
+    format_preset: humanize
+
+  - name: vegas_wins
+    label: Vegas Win Total
+    expression: AVG(win_total)
+    description: Vegas over/under win total projection
+    format_preset: humanize
+
+  - name: team_count
+    label: Team Count
+    expression: COUNT(DISTINCT team)
+    description: Number of teams

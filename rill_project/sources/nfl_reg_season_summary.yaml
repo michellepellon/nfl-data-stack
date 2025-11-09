@@ -1,0 +1,6 @@
+# Source: NFL Regular Season Summary
+# Team regular season statistics with win probabilities
+
+type: source
+connector: duckdb
+sql: SELECT * FROM read_parquet('../data/data_catalog/nfl_reg_season_end.parquet')

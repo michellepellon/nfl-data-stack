@@ -1,0 +1,123 @@
+# NFL Model Quality Dashboard
+# Statistical rigor: Brier score decomposition, calibration, week-over-week performance
+# Demonstrates model effectiveness through rigorous metrics
+
+type: metrics_view
+model: nfl_model_performance
+
+timeseries: ingested_at
+
+dimensions:
+  - name: week
+    label: Week
+    column: week_number
+    description: NFL week number
+
+  - name: performance_rating
+    label: Performance Level
+    column: performance_rating
+    description: Qualitative assessment (Excellent/Good/Fair)
+
+measures:
+  # Primary performance metrics
+  - name: brier_score
+    label: Brier Score
+    expression: AVG(brier_score)
+    description: Mean squared error of predictions (lower is better, <0.20 excellent)
+    format_preset: humanize
+
+  - name: log_loss
+    label: Log Loss
+    expression: AVG(log_loss)
+    description: Logarithmic loss (lower is better)
+    format_preset: humanize
+
+  - name: accuracy
+    label: Accuracy
+    expression: AVG(accuracy)
+    description: Percentage of correct predictions
+    format_preset: percentage
+
+  - name: games_analyzed
+    label: Games
+    expression: AVG(n_games)
+    description: Games per week
+    format_preset: humanize
+
+  # Brier score decomposition (statistical rigor)
+  - name: reliability_component
+    label: Reliability
+    expression: AVG(brier_reliability)
+    description: Calibration quality (should be low)
+    format_preset: humanize
+
+  - name: resolution_component
+    label: Resolution
+    expression: AVG(brier_resolution)
+    description: Ability to distinguish outcomes (should be high)
+    format_preset: humanize
+
+  - name: uncertainty_component
+    label: Uncertainty
+    expression: AVG(brier_uncertainty)
+    description: Inherent unpredictability
+    format_preset: humanize
+
+  # Overall benchmarks
+  - name: overall_brier
+    label: Season Brier
+    expression: AVG(overall_brier)
+    description: Overall Brier score
+    format_preset: humanize
+
+  - name: overall_logloss
+    label: Season Log Loss
+    expression: AVG(overall_logloss)
+    description: Overall log loss
+    format_preset: humanize
+
+  - name: overall_accuracy
+    label: Season Accuracy
+    expression: AVG(overall_accuracy)
+    description: Overall prediction accuracy
+    format_preset: percentage
+
+  # Derived insights
+  - name: weeks_excellent
+    label: Weeks (Excellent)
+    expression: SUM(CASE WHEN performance_rating = 'Excellent' THEN 1 ELSE 0 END)
+    description: Weeks with Brier < 0.20
+
+  - name: weeks_good
+    label: Weeks (Good)
+    expression: SUM(CASE WHEN performance_rating = 'Good' THEN 1 ELSE 0 END)
+    description: Weeks with Brier 0.20-0.23
+
+  - name: weeks_fair
+    label: Weeks (Fair)
+    expression: SUM(CASE WHEN performance_rating = 'Fair' THEN 1 ELSE 0 END)
+    description: Weeks with Brier 0.23-0.25
+
+  - name: total_weeks
+    label: Total Weeks
+    expression: COUNT(DISTINCT week_number)
+    description: Weeks analyzed
+
+  # Trend metrics
+  - name: min_brier
+    label: Best Brier
+    expression: MIN(brier_score)
+    description: Best weekly Brier score
+    format_preset: humanize
+
+  - name: max_brier
+    label: Worst Brier
+    expression: MAX(brier_score)
+    description: Worst weekly Brier score
+    format_preset: humanize
+
+  - name: brier_stddev
+    label: Brier StdDev
+    expression: STDDEV_SAMP(brier_score)
+    description: Consistency of performance
+    format_preset: humanize

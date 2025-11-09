@@ -1,0 +1,12 @@
+# DuckDB config reference:
+config:
+  send_anonymous_usage_stats: False
+  use_colors: True
+default:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      threads: 1
+      path: "../data/data_catalog/mdsbox.duckdb"
+      external_root: "../data/data_catalog"

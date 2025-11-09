@@ -1,0 +1,7 @@
+# Rill project configuration
+# NFL Monte Carlo Simulation Analytics
+
+title: "NFL Predictions Dashboard"
+description: "Interactive NFL predictions dashboard with ELO ratings, Monte Carlo simulations, and feature-enhanced forecasts. Demonstrates model effectiveness through rigorous statistical analysis."
+
+olap_connector: duckdb

@@ -1,0 +1,6 @@
+# Source: NFL Weekly Picks
+# Pre-formatted predictions grouped by confidence tier
+
+type: source
+connector: duckdb
+sql: SELECT * FROM read_parquet('../data/data_catalog/nfl_weekly_picks.parquet')
