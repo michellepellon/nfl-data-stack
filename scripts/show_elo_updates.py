@@ -9,7 +9,7 @@ import argparse
 def show_elo_updates(top_n=10):
     # Load ELO rollforward data from DuckDB
     import duckdb
-    conn = duckdb.connect('data/data_catalog/mdsbox.duckdb', read_only=True)
+    conn = duckdb.connect('data/data_catalog/nflds.duckdb', read_only=True)
     df = conn.execute("SELECT * FROM nfl_elo_rollforward ORDER BY game_id").df()
     conn.close()
 

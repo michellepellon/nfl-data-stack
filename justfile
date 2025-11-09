@@ -156,3 +156,14 @@ collect-features start="2020" end="2024":
 temporal-cv:
     @echo "Running temporal cross-validation..."
     .venv/bin/python scripts/temporal_cross_validation.py
+
+# Web: Start local web server to view predictions webpage
+web:
+    @echo "Starting web server at http://localhost:8080..."
+    @echo "Press Ctrl+C to stop"
+    python3 serve.py
+
+# Update-Web: Regenerate data for predictions webpage
+update-web week="10":
+    @echo "Regenerating webpage data for Week {{week}}..."
+    .venv/bin/python update_webpage.py --week {{week}}

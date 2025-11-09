@@ -8,7 +8,7 @@ import duckdb
 
 def show_calibration():
     # Load calibration data from DuckDB
-    conn = duckdb.connect('data/data_catalog/mdsbox.duckdb', read_only=True)
+    conn = duckdb.connect('data/data_catalog/nflds.duckdb', read_only=True)
     df = conn.execute("SELECT * FROM nfl_elo_calibration ORDER BY bin_lower").df()
     conn.close()
 

@@ -16,6 +16,31 @@ combining:
 - **Monte Carlo Simulations** (10,000 iterations) for probability estimation
 - **Statistical Validation** including calibration analysis and confidence intervals
 - **Modern Data Stack** using [DuckDB][duckdb], [dbt], [Parquet][parquet], and [Rill][rill]
+- **Interactive Webpage** with Tufte-inspired design for exploring predictions
+
+## Quick Start
+
+View the predictions webpage:
+
+```bash
+# Start the web server
+just web
+
+# Or manually:
+python3 serve.py
+```
+
+Then open http://localhost:8080 in your browser.
+
+Update predictions for a new week:
+
+```bash
+# Update for Week 11
+just update-web week=11
+
+# Or manually:
+python update_webpage.py --week 11
+```
 
 ## License
 

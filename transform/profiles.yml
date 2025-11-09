@@ -8,5 +8,5 @@ default:
     dev:
       type: duckdb
       threads: 1
-      path: "../data/data_catalog/mdsbox.duckdb"
+      path: "../data/data_catalog/nflds.duckdb"
       external_root: "../data/data_catalog"
