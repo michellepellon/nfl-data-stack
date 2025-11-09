@@ -62,9 +62,14 @@ def generate_full_webpage_data():
     }
 
     # Get current team ratings
+    # NOTE: This is for reference only - DO NOT use vegas_preseason_total for display
+    # vegas_preseason_total is Vegas preseason over/under, NOT model projections
+    # For projected wins, use playoffs.avg_wins instead
     ratings_df = pd.read_parquet(data_dir / "nfl_ratings.parquet")
     ratings_df = ratings_df.sort_values('elo_rating', ascending=False)
-    data["ratings"] = ratings_df[['team', 'conf', 'division', 'elo_rating', 'win_total']].to_dict('records')
+    ratings_subset = ratings_df[['team', 'conf', 'division', 'elo_rating', 'win_total']].copy()
+    ratings_subset = ratings_subset.rename(columns={'win_total': 'vegas_preseason_total'})
+    data["ratings"] = ratings_subset.to_dict('records')
 
     # Get predictions for current week from simulator
     sim_df = pd.read_parquet(data_dir / "nfl_reg_season_simulator.parquet")
