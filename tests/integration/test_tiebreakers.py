@@ -302,30 +302,103 @@ class TestThreeWayTies:
 
 
 @pytest.mark.integration
-@pytest.mark.skip(reason="Requires historical NFL playoff data")
 class TestHistoricalPlayoffs:
     """Regression tests using actual NFL playoff results"""
 
-    def test_2024_playoffs(self):
-        """Validate against 2024 playoff seeding"""
-        # TODO: Load 2024 season results and validate playoff seeds
-        # Expected seeds (example):
-        # AFC: 1. Chiefs, 2. Bills, 3. Ravens, 4. Texans, 5. Browns, 6. Dolphins, 7. Steelers
-        # NFC: 1. 49ers, 2. Cowboys, 3. Lions, 4. Buccaneers, 5. Eagles, 6. Rams, 7. Packers
+    def test_2024_playoff_seeds_documented(self):
+        """Document 2024 playoff seeding for future validation"""
+        from tests.fixtures.nfl_2024_playoff_results import (
+            NFL_2024_PLAYOFF_SEEDS,
+            get_playoff_teams,
+            get_division_winners,
+            get_wild_cards,
+        )
+
+        # Verify fixture data structure
+        assert "AFC" in NFL_2024_PLAYOFF_SEEDS
+        assert "NFC" in NFL_2024_PLAYOFF_SEEDS
+
+        # Verify 7 teams per conference
+        assert len(NFL_2024_PLAYOFF_SEEDS["AFC"]) == 7
+        assert len(NFL_2024_PLAYOFF_SEEDS["NFC"]) == 7
+
+        # Verify seeds 1-7 present
+        for conf in ["AFC", "NFC"]:
+            seeds = list(NFL_2024_PLAYOFF_SEEDS[conf].keys())
+            assert sorted(seeds) == [1, 2, 3, 4, 5, 6, 7]
+
+        # Verify helper functions work
+        afc_playoff_teams = get_playoff_teams("AFC")
+        assert len(afc_playoff_teams) == 7
+        assert "Kansas City Chiefs" in afc_playoff_teams
+
+        afc_division_winners = get_division_winners("AFC")
+        assert len(afc_division_winners) == 4
+
+        afc_wild_cards = get_wild_cards("AFC")
+        assert len(afc_wild_cards) == 3
+
+    def test_2024_playoff_seeds_known_results(self):
+        """Test known 2024 playoff results"""
+        from tests.fixtures.nfl_2024_playoff_results import NFL_2024_PLAYOFF_SEEDS
+
+        # AFC seeds
+        assert NFL_2024_PLAYOFF_SEEDS["AFC"][1]["team"] == "Kansas City Chiefs"
+        assert NFL_2024_PLAYOFF_SEEDS["AFC"][2]["team"] == "Buffalo Bills"
+        assert NFL_2024_PLAYOFF_SEEDS["AFC"][7]["team"] == "Denver Broncos"
+
+        # NFC seeds
+        assert NFL_2024_PLAYOFF_SEEDS["NFC"][1]["team"] == "Detroit Lions"
+        assert NFL_2024_PLAYOFF_SEEDS["NFC"][2]["team"] == "Philadelphia Eagles"
+        assert NFL_2024_PLAYOFF_SEEDS["NFC"][7]["team"] == "Green Bay Packers"
+
+    def test_2024_tiebreaker_scenarios_documented(self):
+        """Document interesting 2024 tiebreaker scenarios"""
+        from tests.fixtures.nfl_2024_playoff_results import NFL_2024_TIEBREAKER_NOTES
+
+        # AFC 10-7 three-way tie
+        assert "AFC_10-7_tie" in NFL_2024_TIEBREAKER_NOTES
+        afc_tie = NFL_2024_TIEBREAKER_NOTES["AFC_10-7_tie"]
+        assert len(afc_tie["teams"]) == 3
+        assert "Houston Texans" in afc_tie["teams"]
+
+        # NFC 10-7 three-way tie (Seattle missed playoffs!)
+        assert "NFC_10-7_tie" in NFL_2024_TIEBREAKER_NOTES
+        nfc_tie = NFL_2024_TIEBREAKER_NOTES["NFC_10-7_tie"]
+        assert "Seattle Seahawks" in nfc_tie["teams"]
+        assert "MISSED" in nfc_tie["note"]
+
+    @pytest.mark.skip(reason="Requires full 2024 season game data")
+    def test_2024_tiebreaker_validation_full(self):
+        """
+        Full validation of 2024 tiebreaker logic
+
+        This test would:
+        1. Load all 2024 season game results
+        2. Run tiebreaker model with actual results
+        3. Compare output seeds to NFL_2024_PLAYOFF_SEEDS
+        4. Assert all seeds match exactly
+
+        TODO: Implement when 2024 season game data is available
+        """
         pass
 
+    @pytest.mark.skip(reason="Requires historical data")
     def test_2023_playoffs(self):
         """Validate against 2023 playoff seeding"""
         pass
 
+    @pytest.mark.skip(reason="Requires historical data")
     def test_2022_playoffs(self):
         """Validate against 2022 playoff seeding"""
         pass
 
+    @pytest.mark.skip(reason="Requires historical data")
     def test_2021_playoffs(self):
         """Validate against 2021 playoff seeding"""
         pass
 
+    @pytest.mark.skip(reason="Requires historical data")
     def test_2020_playoffs(self):
         """Validate against 2020 playoff seeding"""
         pass
