@@ -8,6 +8,8 @@ for real-time data collection.
 import pytest
 import sys
 from pathlib import Path
+from unittest.mock import patch, Mock
+import requests
 
 # Add scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
@@ -213,13 +215,25 @@ class TestEspnApiIntegration:
 
     def test_fetch_espn_scoreboard_timeout(self):
         """Test API timeout handling"""
-        # This would require mocking requests.get to simulate timeout
-        pytest.skip("Requires request mocking")
+        with patch('collect_espn_scores.requests.get') as mock_get:
+            # Simulate a timeout
+            mock_get.side_effect = requests.Timeout("Connection timeout")
+
+            result = fetch_espn_scoreboard(year=2024, season_type=2)
+
+            # Function should return None on timeout
+            assert result is None
 
     def test_fetch_espn_scoreboard_error(self):
         """Test API error handling"""
-        # This would require mocking requests.get to simulate HTTP error
-        pytest.skip("Requires request mocking")
+        with patch('collect_espn_scores.requests.get') as mock_get:
+            # Simulate an HTTP error
+            mock_get.side_effect = requests.HTTPError("500 Server Error")
+
+            result = fetch_espn_scoreboard(year=2024, season_type=2)
+
+            # Function should return None on error
+            assert result is None
 
 
 @pytest.mark.unit

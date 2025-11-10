@@ -222,41 +222,6 @@ class TestDataFreshness:
             f"Data is stale (last updated: {latest_ingestion}, now: {now})"
 
 
-@pytest.mark.integration
-class TestEloRollforwardOutput:
-    """Test ELO rollforward model outputs"""
-
-    def test_elo_rollforward_has_all_games(self, data_catalog_dir):
-        """ELO rollforward should have one row per completed game"""
-        file_path = data_catalog_dir / "nfl_elo_rollforward.parquet"
-
-        if not file_path.exists():
-            pytest.skip(f"File not found: {file_path}")
-
-        df = pd.read_parquet(file_path)
-
-        # Should have game_id column
-        assert "game_id" in df.columns
-        assert "elo_change" in df.columns
-        assert "home_team_elo_rating" in df.columns
-        assert "visiting_team_elo_rating" in df.columns
-
-        # game_id should be unique
-        assert df["game_id"].is_unique, "game_id should be unique"
-
-    def test_elo_changes_reasonable(self, data_catalog_dir):
-        """ELO changes should be reasonable magnitude"""
-        file_path = data_catalog_dir / "nfl_elo_rollforward.parquet"
-
-        if not file_path.exists():
-            pytest.skip(f"File not found: {file_path}")
-
-        df = pd.read_parquet(file_path)
-
-        # With K=20 and MOV multiplier, ELO changes should be < 100
-        # (extreme blowout upsets might be ~50-70, normal games ~10-20)
-        assert df["elo_change"].abs().max() < 100, \
-            "ELO changes should be < 100 for normal games"
-
-        # No null ELO changes
-        assert df["elo_change"].notna().all(), "ELO changes should not be null"
+# NOTE: TestEloRollforwardOutput was removed because nfl_elo_rollforward
+# is an ephemeral Python model that doesn't materialize to parquet.
+# ELO calculation logic is already tested in tests/unit/test_elo_calculations.py
