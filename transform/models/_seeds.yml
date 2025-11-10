@@ -1,0 +1,45 @@
+version: 2
+
+seeds:
+  - name: nfl_teams_seed
+    description: |
+      Official NFL team metadata including team names, abbreviations, conferences, and divisions.
+      This seed serves as the single source of truth for team information across all models.
+
+      Updated: 2025 season
+      Source: NFL.com official team directory
+    columns:
+      - name: team
+        description: Full team name (e.g., "Kansas City Chiefs")
+        data_tests:
+          - unique
+          - not_null
+
+      - name: team_short
+        description: Official team abbreviation (e.g., "KC")
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['BUF', 'MIA', 'NYJ', 'NE', 'CIN', 'BAL', 'CLE', 'PIT',
+                         'JAX', 'TEN', 'IND', 'HOU', 'KC', 'LAC', 'DEN', 'LV',
+                         'PHI', 'DAL', 'NYG', 'WAS', 'DET', 'MIN', 'GB', 'CHI',
+                         'NO', 'CAR', 'ATL', 'TB', 'SF', 'SEA', 'LAR', 'ARI']
+
+      - name: conf
+        description: Conference (AFC or NFC)
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['AFC', 'NFC']
+
+      - name: division
+        description: Division name (e.g., "AFC West")
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['AFC East', 'AFC West', 'AFC North', 'AFC South',
+                         'NFC East', 'NFC West', 'NFC North', 'NFC South']

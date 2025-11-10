@@ -1,0 +1,33 @@
+team,team_short,conf,division
+Buffalo Bills,BUF,AFC,AFC East
+Miami Dolphins,MIA,AFC,AFC East
+New York Jets,NYJ,AFC,AFC East
+New England Patriots,NE,AFC,AFC East
+Cincinnati Bengals,CIN,AFC,AFC North
+Baltimore Ravens,BAL,AFC,AFC North
+Cleveland Browns,CLE,AFC,AFC North
+Pittsburgh Steelers,PIT,AFC,AFC North
+Jacksonville Jaguars,JAX,AFC,AFC South
+Tennessee Titans,TEN,AFC,AFC South
+Indianapolis Colts,IND,AFC,AFC South
+Houston Texans,HOU,AFC,AFC South
+Kansas City Chiefs,KC,AFC,AFC West
+Los Angeles Chargers,LAC,AFC,AFC West
+Denver Broncos,DEN,AFC,AFC West
+Las Vegas Raiders,LV,AFC,AFC West
+Philadelphia Eagles,PHI,NFC,NFC East
+Dallas Cowboys,DAL,NFC,NFC East
+New York Giants,NYG,NFC,NFC East
+Washington Commanders,WAS,NFC,NFC East
+Detroit Lions,DET,NFC,NFC North
+Minnesota Vikings,MIN,NFC,NFC North
+Green Bay Packers,GB,NFC,NFC North
+Chicago Bears,CHI,NFC,NFC North
+New Orleans Saints,NO,NFC,NFC South
+Carolina Panthers,CAR,NFC,NFC South
+Atlanta Falcons,ATL,NFC,NFC South
+Tampa Bay Buccaneers,TB,NFC,NFC South
+San Francisco 49ers,SF,NFC,NFC West
+Seattle Seahawks,SEA,NFC,NFC West
+Los Angeles Rams,LAR,NFC,NFC West
+Arizona Cardinals,ARI,NFC,NFC West

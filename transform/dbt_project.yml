@@ -22,6 +22,15 @@ clean-targets:
 - ../docs
 - dbt_packages
 - logs
+seeds:
+  sports_sims:
+    nfl_teams_seed:
+      +column_types:
+        team: varchar
+        team_short: varchar
+        conf: varchar
+        division: varchar
+
 models:
   sports_sims:
     nfl:
