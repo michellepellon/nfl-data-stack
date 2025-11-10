@@ -1,9 +1,11 @@
 select
-    "Team" as team,
-    "Team_short" as team_short,
-    "Win Total" as win_total,
-    "ELO rating" as elo_rating,
-    "Conf" as conf,
-    "Division" as division,
+    seed.team,
+    seed.team_short,
+    ratings."Win Total" as win_total,
+    ratings."ELO rating" as elo_rating,
+    seed.conf,
+    seed.division,
     {{ add_ingestion_timestamp() }}
-from {{ source("nfl", "nfl_team_ratings") }}
+from {{ ref("nfl_teams_seed") }} seed
+left join {{ source("nfl", "nfl_team_ratings") }} ratings
+    on seed.team_short = ratings."Team_short"

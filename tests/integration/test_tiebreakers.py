@@ -35,7 +35,9 @@ from nfl_tiebreakers_optimized import (
     _div_conf_records,
     _h2h_summary,
     _h2h_metrics,
+    model,
 )
+from tests.dbt_test_harness import DbtTestHarness
 
 
 @pytest.fixture
@@ -231,38 +233,322 @@ class TestTiebreakerHelpers:
 
 @pytest.mark.integration
 class TestDivisionWinners:
-    """Test division winner determination
+    """Test division winner determination"""
 
-    NOTE: These tests require building a full dbt test harness to mock
-    the ref() system and create synthetic playoff scenarios. This is a
-    multi-day effort requiring:
-    - Mock dbt context with ref() to nfl_reg_season_simulator and nfl_ratings
-    - Synthetic playoff data (10k scenarios × 32 teams × 17 weeks)
-    - Proper categorical type handling for Polars DataFrames
-
-    Future work: Implement dbt-testable wrapper around model() function.
-    """
-
-    def test_clear_division_winner(self):
+    def test_clear_division_winner(self, sample_teams):
         """Test scenario with clear division winner (best record)"""
-        pytest.skip("Requires dbt test infrastructure (future work)")
+        # AFC East: Buffalo (12-5), Miami (10-7), NYJ (8-9), NE (7-10)
+        # Buffalo should be division winner
+        games = []
+        scenario_id = 1
 
-    def test_tied_division_winner_h2h(self):
+        # Buffalo Bills: 12 wins
+        for i in range(12):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Buffalo Bills" if i % 2 == 0 else f"Opponent{i}",
+                "visiting_team": f"Opponent{i}" if i % 2 == 0 else "Buffalo Bills",
+                "winning_team": "Buffalo Bills",
+            })
+        for i in range(5):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Buffalo Bills" if i % 2 == 0 else f"Loser{i}",
+                "visiting_team": f"Loser{i}" if i % 2 == 0 else "Buffalo Bills",
+                "winning_team": f"Loser{i}",
+            })
+
+        # Miami Dolphins: 10 wins
+        for i in range(10):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Miami Dolphins" if i % 2 == 0 else f"MiaOpp{i}",
+                "visiting_team": f"MiaOpp{i}" if i % 2 == 0 else "Miami Dolphins",
+                "winning_team": "Miami Dolphins",
+            })
+        for i in range(7):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Miami Dolphins" if i % 2 == 0 else f"MiaLoss{i}",
+                "visiting_team": f"MiaLoss{i}" if i % 2 == 0 else "Miami Dolphins",
+                "winning_team": f"MiaLoss{i}",
+            })
+
+        simulator_df = pl.DataFrame(games)
+        ratings_df = sample_teams.select(["team", "conf", "division"])
+
+        harness = DbtTestHarness()
+        harness.add_ref("nfl_reg_season_simulator", simulator_df)
+        harness.add_ref("nfl_ratings", ratings_df)
+
+        result_pdf = model(harness.dbt, harness.session)
+        result = pl.from_pandas(result_pdf)
+
+        # Buffalo should be AFC East division winner (rank 1-4)
+        bills_result = result.filter(pl.col("team") == "Buffalo Bills")
+        assert len(bills_result) > 0, "Buffalo Bills should be in results"
+        bills_rank = bills_result[0, "rank"]
+        assert 1 <= bills_rank <= 4, f"Buffalo should be division winner (rank 1-4), got rank {bills_rank}"
+
+        # Miami should not be division winner (rank 5+)
+        dolphins_result = result.filter(pl.col("team") == "Miami Dolphins")
+        if len(dolphins_result) > 0:
+            dolphins_rank = dolphins_result[0, "rank"]
+            # If both are in the same division and conference, Miami should rank lower
+            if dolphins_result[0, "conference"] == bills_result[0, "conference"]:
+                assert dolphins_rank > bills_rank, "Miami should rank below Buffalo"
+
+    def test_tied_division_winner_h2h(self, sample_teams):
         """Test division tie broken by head-to-head"""
-        pytest.skip("Requires dbt test infrastructure (future work)")
+        # AFC East: Buffalo and Miami both 11-6, but Buffalo wins head-to-head 2-0
+        games = []
+        scenario_id = 2
+
+        # Buffalo Bills: 11 wins (including 2 vs Miami)
+        for i in range(9):  # 9 wins against other opponents
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Buffalo Bills" if i % 2 == 0 else f"Opponent{i}",
+                "visiting_team": f"Opponent{i}" if i % 2 == 0 else "Buffalo Bills",
+                "winning_team": "Buffalo Bills",
+            })
+        # 2 wins vs Miami
+        games.extend([
+            {
+                "scenario_id": scenario_id,
+                "home_team": "Buffalo Bills",
+                "visiting_team": "Miami Dolphins",
+                "winning_team": "Buffalo Bills",
+            },
+            {
+                "scenario_id": scenario_id,
+                "home_team": "Miami Dolphins",
+                "visiting_team": "Buffalo Bills",
+                "winning_team": "Buffalo Bills",
+            },
+        ])
+        # 6 losses
+        for i in range(6):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Buffalo Bills" if i % 2 == 0 else f"Loser{i}",
+                "visiting_team": f"Loser{i}" if i % 2 == 0 else "Buffalo Bills",
+                "winning_team": f"Loser{i}",
+            })
+
+        # Miami Dolphins: 11 wins (against others, already lost 2 to Buffalo)
+        for i in range(11):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Miami Dolphins" if i % 2 == 0 else f"MiaOpp{i}",
+                "visiting_team": f"MiaOpp{i}" if i % 2 == 0 else "Miami Dolphins",
+                "winning_team": "Miami Dolphins",
+            })
+        # 4 more losses (2 already to Buffalo)
+        for i in range(4):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Miami Dolphins" if i % 2 == 0 else f"MiaLoss{i}",
+                "visiting_team": f"MiaLoss{i}" if i % 2 == 0 else "Miami Dolphins",
+                "winning_team": f"MiaLoss{i}",
+            })
+
+        simulator_df = pl.DataFrame(games)
+        ratings_df = sample_teams.select(["team", "conf", "division"])
+
+        harness = DbtTestHarness()
+        harness.add_ref("nfl_reg_season_simulator", simulator_df)
+        harness.add_ref("nfl_ratings", ratings_df)
+
+        result_pdf = model(harness.dbt, harness.session)
+        result = pl.from_pandas(result_pdf)
+
+        # Both should be in AFC, but Buffalo should rank higher due to h2h
+        bills_result = result.filter(pl.col("team") == "Buffalo Bills")
+        dolphins_result = result.filter(pl.col("team") == "Miami Dolphins")
+
+        if len(bills_result) > 0 and len(dolphins_result) > 0:
+            bills_rank = bills_result[0, "rank"]
+            dolphins_rank = dolphins_result[0, "rank"]
+            assert bills_rank < dolphins_rank, "Buffalo should rank higher than Miami (won head-to-head)"
 
 
 @pytest.mark.integration
 class TestWildCardSeeding:
-    """Test wild card seeding logic (requires dbt test infrastructure)"""
+    """Test wild card seeding logic"""
 
-    def test_wild_card_by_record(self):
+    def test_wild_card_by_record(self, sample_teams):
         """Test wild card seeding by overall record"""
-        pytest.skip("Requires dbt test infrastructure (future work)")
+        # Create scenario where division winners are clear,
+        # and wild cards are sorted by record
+        games = []
+        scenario_id = 3
 
-    def test_wild_card_tied_h2h(self):
+        # AFC East winner: Buffalo 12-5
+        for i in range(12):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Buffalo Bills",
+                "visiting_team": f"Opp{i}",
+                "winning_team": "Buffalo Bills",
+            })
+        for i in range(5):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": f"Loss{i}",
+                "visiting_team": "Buffalo Bills",
+                "winning_team": f"Loss{i}",
+            })
+
+        # AFC West winner: Kansas City 11-6
+        for i in range(11):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Kansas City Chiefs",
+                "visiting_team": f"KCOpp{i}",
+                "winning_team": "Kansas City Chiefs",
+            })
+        for i in range(6):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": f"KCLoss{i}",
+                "visiting_team": "Kansas City Chiefs",
+                "winning_team": f"KCLoss{i}",
+            })
+
+        # Wild card contenders from AFC East: Miami 10-7 (should be WC5)
+        for i in range(10):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Miami Dolphins",
+                "visiting_team": f"MiaOpp{i}",
+                "winning_team": "Miami Dolphins",
+            })
+        for i in range(7):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": f"MiaLoss{i}",
+                "visiting_team": "Miami Dolphins",
+                "winning_team": f"MiaLoss{i}",
+            })
+
+        # Wild card contender: New York Jets 9-8 (should be WC6 or miss)
+        for i in range(9):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "New York Jets",
+                "visiting_team": f"NYJOpp{i}",
+                "winning_team": "New York Jets",
+            })
+        for i in range(8):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": f"NYJLoss{i}",
+                "visiting_team": "New York Jets",
+                "winning_team": f"NYJLoss{i}",
+            })
+
+        simulator_df = pl.DataFrame(games)
+        ratings_df = sample_teams.select(["team", "conf", "division"])
+
+        harness = DbtTestHarness()
+        harness.add_ref("nfl_reg_season_simulator", simulator_df)
+        harness.add_ref("nfl_ratings", ratings_df)
+
+        result_pdf = model(harness.dbt, harness.session)
+        result = pl.from_pandas(result_pdf)
+
+        # Check that teams are ranked by wins
+        bills_rank = result.filter(pl.col("team") == "Buffalo Bills")[0, "rank"]
+        kc_rank = result.filter(pl.col("team") == "Kansas City Chiefs")[0, "rank"]
+        miami_rank = result.filter(pl.col("team") == "Miami Dolphins")[0, "rank"]
+        jets_rank = result.filter(pl.col("team") == "New York Jets")[0, "rank"]
+
+        # Division winners should rank 1-4
+        assert 1 <= bills_rank <= 4
+        assert 1 <= kc_rank <= 4
+
+        # Miami (10 wins) should be wild card (5-7) and rank better than Jets (9 wins)
+        assert miami_rank < jets_rank, "Team with more wins should rank higher"
+
+    def test_wild_card_tied_h2h(self, sample_teams):
         """Test wild card tie broken by head-to-head"""
-        pytest.skip("Requires dbt test infrastructure (future work)")
+        # Two wild card contenders with same record, broken by h2h
+        games = []
+        scenario_id = 4
+
+        # AFC East winner: Buffalo 12-5
+        for i in range(12):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Buffalo Bills",
+                "visiting_team": f"Opp{i}",
+                "winning_team": "Buffalo Bills",
+            })
+        for i in range(5):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": f"Loss{i}",
+                "visiting_team": "Buffalo Bills",
+                "winning_team": f"Loss{i}",
+            })
+
+        # Wild card contenders: Miami and NYJ both 10-7, Miami wins h2h
+        # Miami: 10 wins (including 1 vs NYJ)
+        for i in range(9):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "Miami Dolphins",
+                "visiting_team": f"MiaOpp{i}",
+                "winning_team": "Miami Dolphins",
+            })
+        games.append({
+            "scenario_id": scenario_id,
+            "home_team": "Miami Dolphins",
+            "visiting_team": "New York Jets",
+            "winning_team": "Miami Dolphins",
+        })
+        for i in range(7):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": f"MiaLoss{i}",
+                "visiting_team": "Miami Dolphins",
+                "winning_team": f"MiaLoss{i}",
+            })
+
+        # NYJ: 10 wins (lost to Miami)
+        for i in range(10):
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": "New York Jets",
+                "visiting_team": f"NYJOpp{i}",
+                "winning_team": "New York Jets",
+            })
+        for i in range(6):  # 6 more losses (already lost to Miami)
+            games.append({
+                "scenario_id": scenario_id,
+                "home_team": f"NYJLoss{i}",
+                "visiting_team": "New York Jets",
+                "winning_team": f"NYJLoss{i}",
+            })
+
+        simulator_df = pl.DataFrame(games)
+        ratings_df = sample_teams.select(["team", "conf", "division"])
+
+        harness = DbtTestHarness()
+        harness.add_ref("nfl_reg_season_simulator", simulator_df)
+        harness.add_ref("nfl_ratings", ratings_df)
+
+        result_pdf = model(harness.dbt, harness.session)
+        result = pl.from_pandas(result_pdf)
+
+        miami_result = result.filter(pl.col("team") == "Miami Dolphins")
+        jets_result = result.filter(pl.col("team") == "New York Jets")
+
+        if len(miami_result) > 0 and len(jets_result) > 0:
+            miami_rank = miami_result[0, "rank"]
+            jets_rank = jets_result[0, "rank"]
+            assert miami_rank < jets_rank, "Miami should rank higher (won h2h)"
 
 
 @pytest.mark.integration

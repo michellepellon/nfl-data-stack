@@ -159,63 +159,9 @@ def elo_config():
 
 @pytest.fixture
 def sample_teams():
-    """Sample NFL teams for tiebreaker testing"""
-    return pl.DataFrame({
-        "team": [
-            # AFC East
-            "Buffalo Bills", "Miami Dolphins", "New England Patriots", "New York Jets",
-            # AFC West
-            "Kansas City Chiefs", "Los Angeles Chargers", "Denver Broncos", "Las Vegas Raiders",
-            # AFC North
-            "Baltimore Ravens", "Pittsburgh Steelers", "Cleveland Browns", "Cincinnati Bengals",
-            # AFC South
-            "Houston Texans", "Indianapolis Colts", "Jacksonville Jaguars", "Tennessee Titans",
-            # NFC East
-            "Philadelphia Eagles", "Dallas Cowboys", "Washington Commanders", "New York Giants",
-            # NFC West
-            "San Francisco 49ers", "Los Angeles Rams", "Seattle Seahawks", "Arizona Cardinals",
-            # NFC North
-            "Detroit Lions", "Green Bay Packers", "Minnesota Vikings", "Chicago Bears",
-            # NFC South
-            "Tampa Bay Buccaneers", "Atlanta Falcons", "New Orleans Saints", "Carolina Panthers",
-        ],
-        "conf": [
-            # AFC East
-            "AFC", "AFC", "AFC", "AFC",
-            # AFC West
-            "AFC", "AFC", "AFC", "AFC",
-            # AFC North
-            "AFC", "AFC", "AFC", "AFC",
-            # AFC South
-            "AFC", "AFC", "AFC", "AFC",
-            # NFC East
-            "NFC", "NFC", "NFC", "NFC",
-            # NFC West
-            "NFC", "NFC", "NFC", "NFC",
-            # NFC North
-            "NFC", "NFC", "NFC", "NFC",
-            # NFC South
-            "NFC", "NFC", "NFC", "NFC",
-        ],
-        "division": [
-            # AFC East
-            "AFC East", "AFC East", "AFC East", "AFC East",
-            # AFC West
-            "AFC West", "AFC West", "AFC West", "AFC West",
-            # AFC North
-            "AFC North", "AFC North", "AFC North", "AFC North",
-            # AFC South
-            "AFC South", "AFC South", "AFC South", "AFC South",
-            # NFC East
-            "NFC East", "NFC East", "NFC East", "NFC East",
-            # NFC West
-            "NFC West", "NFC West", "NFC West", "NFC West",
-            # NFC North
-            "NFC North", "NFC North", "NFC North", "NFC North",
-            # NFC South
-            "NFC South", "NFC South", "NFC South", "NFC South",
-        ],
-    }).with_columns([
+    """NFL teams loaded from seed data for tiebreaker testing"""
+    seed_path = Path(__file__).parent.parent / "transform" / "data" / "nfl_teams_seed.csv"
+    return pl.read_csv(seed_path).with_columns([
         pl.col("team").cast(pl.Categorical),
         pl.col("conf").cast(pl.Categorical),
         pl.col("division").cast(pl.Categorical),
