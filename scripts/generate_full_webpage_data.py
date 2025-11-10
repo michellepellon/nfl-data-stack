@@ -75,10 +75,27 @@ def generate_full_webpage_data():
     sim_df = pd.read_parquet(data_dir / "nfl_reg_season_simulator.parquet")
     current_week_df = sim_df[sim_df['week_number'] == current_week].copy()
 
+    # Get actual results to join with predictions
+    try:
+        results_df = pd.read_parquet(data_dir / "nfl_latest_results.parquet")
+        results_df = results_df[['game_id', 'home_team_score', 'visiting_team_score']]
+    except Exception:
+        results_df = pd.DataFrame(columns=['game_id', 'home_team_score', 'visiting_team_score'])
+
     # Group by game and calculate win probability (convert from basis points)
     current_week_games = []
     for game_id in current_week_df['game_id'].unique():
         game_data = current_week_df[current_week_df['game_id'] == game_id].iloc[0]
+
+        # Get actual scores if available
+        result_data = results_df[results_df['game_id'] == game_id]
+        if len(result_data) > 0:
+            actual_home_score = result_data.iloc[0]['home_team_score']
+            actual_away_score = result_data.iloc[0]['visiting_team_score']
+        else:
+            actual_home_score = None
+            actual_away_score = None
+
         current_week_games.append({
             'game_id': int(game_data['game_id']),
             'week_number': int(game_data['week_number']),
@@ -93,7 +110,9 @@ def generate_full_webpage_data():
             'wind_adj': 0,
             'injury_adj': 0.0,
             'total_adj': 0.0,
-            'confidence_adjusted': abs((float(game_data['home_team_win_probability']) / 10000.0) - 0.5)
+            'confidence_adjusted': abs((float(game_data['home_team_win_probability']) / 10000.0) - 0.5),
+            'actual_home_score': int(actual_home_score) if actual_home_score is not None and pd.notna(actual_home_score) else None,
+            'actual_away_score': int(actual_away_score) if actual_away_score is not None and pd.notna(actual_away_score) else None
         })
 
     # Store predictions with dynamic key
