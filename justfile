@@ -167,3 +167,23 @@ web:
 update-web week="10":
     @echo "Regenerating webpage data for Week {{week}}..."
     .venv/bin/python update_webpage.py --week {{week}}
+
+# Test-Unit: Run unit tests only
+test-unit:
+    @echo "Running unit tests..."
+    uv run pytest tests/unit/ -v
+
+# Test-Integration: Run integration tests only
+test-integration:
+    @echo "Running integration tests..."
+    uv run pytest tests/integration/ -v
+
+# Test-All: Run all tests
+test-all:
+    @echo "Running all tests..."
+    uv run pytest tests/ -v
+
+# Test-Coverage: Run tests with coverage report
+test-coverage:
+    @echo "Running tests with coverage..."
+    uv run pytest tests/ --cov --cov-report=term --cov-report=html
