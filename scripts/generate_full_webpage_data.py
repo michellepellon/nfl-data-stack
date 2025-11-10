@@ -78,17 +78,22 @@ def generate_full_webpage_data():
     # Get actual results to join with predictions
     try:
         results_df = pd.read_parquet(data_dir / "nfl_latest_results.parquet")
-        results_df = results_df[['game_id', 'home_team_score', 'visiting_team_score']]
+        # Match by teams + week, not by game_id (game_ids don't match between sources)
+        results_df = results_df[['week_number', 'home_team', 'visiting_team', 'home_team_score', 'visiting_team_score']]
     except Exception:
-        results_df = pd.DataFrame(columns=['game_id', 'home_team_score', 'visiting_team_score'])
+        results_df = pd.DataFrame(columns=['week_number', 'home_team', 'visiting_team', 'home_team_score', 'visiting_team_score'])
 
     # Group by game and calculate win probability (convert from basis points)
     current_week_games = []
     for game_id in current_week_df['game_id'].unique():
         game_data = current_week_df[current_week_df['game_id'] == game_id].iloc[0]
 
-        # Get actual scores if available
-        result_data = results_df[results_df['game_id'] == game_id]
+        # Get actual scores by matching teams + week (NOT by game_id)
+        result_data = results_df[
+            (results_df['week_number'] == current_week) &
+            (results_df['home_team'] == game_data['home_team']) &
+            (results_df['visiting_team'] == game_data['visiting_team'])
+        ]
         if len(result_data) > 0:
             actual_home_score = result_data.iloc[0]['home_team_score']
             actual_away_score = result_data.iloc[0]['visiting_team_score']
