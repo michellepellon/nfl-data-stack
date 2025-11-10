@@ -51,6 +51,9 @@ vars:
   random_seed: 42             # seed for reproducible random number generation
   enable_profiling: false     # enable DuckDB EXPLAIN ANALYZE profiling
   elo_k_factor: 20            # ELO K-factor (learning rate) for rating updates
+  elo_scale: 400              # ELO rating scale (400-point diff = 90% win prob)
+  mov_multiplier_base: 2.2    # MOV multiplier base constant (FiveThirtyEight formula)
+  mov_multiplier_divisor: 0.001  # MOV multiplier elo_diff adjustment factor
 
 # external files are only registered as DuckDB views when they are created, not when they are referenced.
 on-run-start:

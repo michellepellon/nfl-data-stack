@@ -28,7 +28,10 @@ def calc_elo_diff(
     visiting_elo: float,
     home_adv: float,
     scoring_margin: float,
-    k_factor: float = 20.0
+    k_factor: float = 20.0,
+    elo_scale: float = 400.0,
+    mov_multiplier_base: float = 2.2,
+    mov_multiplier_divisor: float = 0.001
 ) -> float:
     """
     Calculate ELO rating change with Margin-of-Victory multiplier
@@ -40,6 +43,9 @@ def calc_elo_diff(
     - home_adv: Home field advantage (typically 52 points)
     - scoring_margin: Absolute point differential
     - k_factor: Learning rate (default 20)
+    - elo_scale: ELO rating scale (default 400, where 400-point diff = 90% win prob)
+    - mov_multiplier_base: MOV multiplier base constant (default 2.2, FiveThirtyEight formula)
+    - mov_multiplier_divisor: MOV multiplier elo_diff adjustment factor (default 0.001)
 
     Returns:
     - ELO change (positive = visiting team gains rating, negative = home team gains)
@@ -48,8 +54,8 @@ def calc_elo_diff(
     elo_change = K * MOV_mult * (actual - expected)
 
     Where:
-    - expected = 1 / (1 + 10^(-(visiting_elo - home_elo - home_adv) / 400))
-    - MOV_mult = ln(|margin|+1) * (2.2 / (|elo_diff| * 0.001 + 2.2))
+    - expected = 1 / (1 + 10^(-(visiting_elo - home_elo - home_adv) / elo_scale))
+    - MOV_mult = ln(|margin|+1) * (mov_base / (|elo_diff| * mov_div + mov_base))
     - elo_diff = winner_elo - loser_elo (accounts for upset magnitude)
     """
     # Convert to float to avoid type issues
@@ -59,6 +65,9 @@ def calc_elo_diff(
     home_adv = float(home_adv)
     scoring_margin = float(scoring_margin)
     k_factor = float(k_factor)
+    elo_scale = float(elo_scale)
+    mov_multiplier_base = float(mov_multiplier_base)
+    mov_multiplier_divisor = float(mov_multiplier_divisor)
 
     # Adjusted home ELO (includes home field advantage)
     adj_home_elo = home_elo + home_adv
@@ -72,10 +81,12 @@ def calc_elo_diff(
     # - Larger margins increase the multiplier (blowouts matter more)
     # - Upsets (negative winner_elo_diff) increase the multiplier
     # - Close games between similar teams have multiplier near 1.0
-    margin_of_victory_multiplier = math.log(abs(scoring_margin) + 1) * (2.2 / (winner_elo_diff * 0.001 + 2.2))
+    margin_of_victory_multiplier = math.log(abs(scoring_margin) + 1) * (
+        mov_multiplier_base / (winner_elo_diff * mov_multiplier_divisor + mov_multiplier_base)
+    )
 
     # Expected win probability for visiting team
-    expected_visiting_win = 1.0 / (10.0 ** (-(visiting_elo - home_elo - home_adv) / 400.0) + 1.0)
+    expected_visiting_win = 1.0 / (10.0 ** (-(visiting_elo - home_elo - home_adv) / elo_scale) + 1.0)
 
     # ELO change (from home team's perspective, negative means home team gains rating)
     # game_result: 1 = visiting team won, 0 = home team won
@@ -96,6 +107,9 @@ def model(dbt, sess):
     # Get configuration parameters
     home_adv = dbt.config.get("nfl_elo_offset", 52.0)
     k_factor = dbt.config.get("elo_k_factor", 20.0)
+    elo_scale = dbt.config.get("elo_scale", 400.0)
+    mov_multiplier_base = dbt.config.get("mov_multiplier_base", 2.2)
+    mov_multiplier_divisor = dbt.config.get("mov_multiplier_divisor", 0.001)
 
     # Load initial ELO ratings
     team_ratings = dbt.ref("nfl_raw_team_ratings").df()
@@ -142,7 +156,10 @@ def model(dbt, sess):
             visiting_elo=velo,
             home_adv=0 if neutral_site == 1 else home_adv,
             scoring_margin=margin,
-            k_factor=k_factor
+            k_factor=k_factor,
+            elo_scale=elo_scale,
+            mov_multiplier_base=mov_multiplier_base,
+            mov_multiplier_divisor=mov_multiplier_divisor
         )
 
         # Store pre-game ratings and ELO change
