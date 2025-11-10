@@ -43,14 +43,14 @@ def _div_conf_records(long_games: pl.DataFrame, teams: pl.DataFrame) -> Tuple[pl
         "scenario_id", "team"
     ]).agg([
         pl.sum("won").alias("div_wins"),
-        (pl.count() - pl.sum("won")).alias("div_losses"),
+        (pl.len() - pl.sum("won")).alias("div_losses"),
     ])
 
     conf = games_with_meta.filter(pl.col("team_conf") == pl.col("opp_conf")).group_by([
         "scenario_id", "team"
     ]).agg([
         pl.sum("won").alias("conf_wins"),
-        (pl.count() - pl.sum("won")).alias("conf_losses"),
+        (pl.len() - pl.sum("won")).alias("conf_losses"),
     ])
 
     return div, conf
@@ -113,7 +113,7 @@ def _common_metrics(candidates: pl.DataFrame, long_games: pl.DataFrame, group_ke
         on=["scenario_id", *group_keys[1:], "opponent"], how="inner",
     ).group_by(["scenario_id", *group_keys[1:], "team"]).agg([
         pl.sum("won").alias("common_wins"),
-        pl.count().alias("common_games"),
+        pl.len().alias("common_games"),
     ]).with_columns([
         (pl.col("common_wins") / (pl.col("common_games") + 1e-10)).alias("common_pct"),
     ])
@@ -135,7 +135,7 @@ def _sov_metrics(candidates: pl.DataFrame, long_games: pl.DataFrame, team_record
         "scenario_id", *group_keys[1:], "winner"
     ]).agg([
         pl.mean("opp_pct").alias("avg_defeated_pct"),
-        pl.count().alias("victories_count"),
+        pl.len().alias("victories_count"),
     ]).rename({"winner": "team"})
     return sov
 
