@@ -24,7 +24,7 @@ def _build_long_games(simulator: pl.DataFrame) -> pl.DataFrame:
 def _team_records(long_games: pl.DataFrame) -> pl.DataFrame:
     return long_games.group_by(["scenario_id", "team"]).agg([
         pl.sum("won").alias("wins"),
-        pl.count().alias("games"),
+        pl.len().alias("games"),
     ]).with_columns([
         (pl.col("games") - pl.col("wins")).alias("losses")
     ])
