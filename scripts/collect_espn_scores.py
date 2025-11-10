@@ -68,9 +68,11 @@ def parse_espn_games(data):
             event_id = event.get('id')
             name = event.get('name')
             status = event['status']['type']['name']
+            status_state = event['status']['type'].get('state', '')
 
-            # Only process completed games
-            if status.lower() not in ['final', 'status_final']:
+            # Only process TRULY completed games (STATUS_FINAL and state='post')
+            # This filters out scheduled, in-progress, and postponed games
+            if status != 'STATUS_FINAL' or status_state != 'post':
                 continue
 
             # Get week number
@@ -154,7 +156,7 @@ def parse_espn_games(data):
                 'Date': date_obj.strftime('%Y-%m-%d'),
                 'Time': date_obj.strftime('%I:%M%p').lstrip('0'),
                 'Winner/tie': winner,
-                '@': '',  # Always @
+                '@': '@' if winner == away_name else '',  # @ if away team won
                 'Loser/tie': loser,
                 'PtsW': pts_w,
                 'PtsL': pts_l,
