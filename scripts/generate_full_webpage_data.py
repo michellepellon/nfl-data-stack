@@ -155,8 +155,8 @@ def generate_full_webpage_data():
         performance_records = []
         for _, row in performance_df.iterrows():
             week_num = int(row['week_number'])
-            # Only include completed weeks
-            if week_num < current_week:
+            # Only include completed weeks (include current week if all games are done)
+            if week_num <= current_week:
                 brier = float(row['brier_score'])
                 performance_records.append({
                     'week_number': week_num,
