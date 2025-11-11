@@ -26,11 +26,25 @@ select
     s.hometm as home_team,
     case when s.week <= 18 then coalesce(r.home_team_elo_rating, h.elo_rating::int) end as home_team_elo_rating,
     s.neutral as neutral_site,
-    case when s.neutral = 0 then {{ var("nfl_elo_offset") }} else 0 end as game_site_adjustment,
+    -- Apply bye week adjustments: +25 ELO for team coming off bye
+    -- Home advantage + bye week bonus for home team - bye week bonus for visiting team
+    case
+        when s.neutral = 0 then
+            {{ var("nfl_elo_offset") }}
+            + (coalesce(b.home_team_off_bye, 0) * {{ var("bye_week_bonus", 25) }})
+            - (coalesce(b.visiting_team_off_bye, 0) * {{ var("bye_week_bonus", 25) }})
+        else
+            -- Neutral site: only bye week adjustments, no home advantage
+            (coalesce(b.home_team_off_bye, 0) * {{ var("bye_week_bonus", 25) }})
+            - (coalesce(b.visiting_team_off_bye, 0) * {{ var("bye_week_bonus", 25) }})
+    end as game_site_adjustment,
+    coalesce(b.home_team_off_bye, 0) as home_team_off_bye,
+    coalesce(b.visiting_team_off_bye, 0) as visiting_team_off_bye,
     {{ add_ingestion_timestamp() }}
 from {{ ref("nfl_raw_schedule") }} as s
 left join {{ ref("nfl_ratings") }} v on v.team = s.vistm
 left join {{ ref("nfl_ratings") }} h on h.team = s.hometm
 left join {{ ref("nfl_elo_rollforward") }} r on r.game_id = s.id
+left join {{ ref("nfl_bye_weeks") }} b on b.game_id = s.id
 group by
     all

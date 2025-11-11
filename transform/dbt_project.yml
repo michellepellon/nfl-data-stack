@@ -55,7 +55,7 @@ vars:
   include_actuals: true       # set to true to use actual game results, otherwise sim entire season
   latest_ratings: true        # set to true to use latest ELO ratings, otherwise use start of season ratings
   sim_start_game_id: 0        # placeholder one multi-container is in place
-  nfl_elo_offset: 52          # nfl offset to ELO to get to 7.5% home advantage
+  nfl_elo_offset: 48          # nfl home field advantage (FiveThirtyEight's rolling 10-year avg)
   ncaaf_elo_offset: 52        # ncaaf offset to ELO to get to 7.5% home advantage
   random_seed: 42             # seed for reproducible random number generation
   enable_profiling: false     # enable DuckDB EXPLAIN ANALYZE profiling
@@ -63,6 +63,7 @@ vars:
   elo_scale: 400              # ELO rating scale (400-point diff = 90% win prob)
   mov_multiplier_base: 2.2    # MOV multiplier base constant (FiveThirtyEight formula)
   mov_multiplier_divisor: 0.001  # MOV multiplier elo_diff adjustment factor
+  bye_week_bonus: 25          # ELO bonus for team coming off bye week (FiveThirtyEight)
 
 # external files are only registered as DuckDB views when they are created, not when they are referenced.
 on-run-start:
