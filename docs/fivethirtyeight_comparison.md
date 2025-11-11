@@ -421,7 +421,7 @@ To implement FiveThirtyEight's full methodology, would need:
 | Feature Category | FiveThirtyEight | nfl-data-stack | Parity |
 |-----------------|----------------|----------------|---------|
 | **Core ELO System** | ✅ Full | ✅ Full | 100% |
-| **Preseason Ratings** | ✅ Vegas + Mean Reversion | ⚠️ Manual | 40% |
+| **Preseason Ratings** | ✅ Vegas + Mean Reversion | ✅ Vegas + Mean Reversion | 100% |
 | **QB Adjustments** | ✅ VALUE System | ❌ None | 0% |
 | **Monte Carlo Sim** | ✅ Hot (dynamic ELO) | ⚠️ Cold (fixed ELO) | 60% |
 | **Special Adjustments** | ✅ Bye/Playoff/Travel/Locked | ✅ Bye + Neutral | 60% |
@@ -429,7 +429,7 @@ To implement FiveThirtyEight's full methodology, would need:
 | **Tiebreaker Logic** | ✅ NFL rules | ✅ NFL rules (tested) | 100% |
 | **Data Collection** | ✅ PFR + QBR | ✅ ESPN + PFR | 90% |
 
-**Overall Parity: ~70%** (updated 2025-11-10)
+**Overall Parity: ~76%** (updated 2025-11-10)
 
 ---
 
@@ -455,15 +455,13 @@ To implement FiveThirtyEight's full methodology, would need:
 
 ### Short-term (High Value, Medium Effort)
 
-4. **Implement preseason mean reversion**:
-   - Add script to regress ratings 1/3 toward 1505 each offseason
-   - Prevents rating drift over multiple seasons
-   - ~50 lines of Python code
-
-5. **Integrate Vegas win totals** (optional preseason calibration):
-   - Scrape or manually input Vegas over/under win totals
-   - Convert to ELO using FiveThirtyEight's formula
-   - Blend with previous season's ratings (1/3 previous + 2/3 Vegas)
+4. **✅ COMPLETED: Implement preseason mean reversion**:
+   - Created `scripts/apply_preseason_mean_reversion.py`
+   - Regresses ratings 1/3 toward 1505 each offseason
+   - Optionally integrates Vegas win totals (2/3 weight)
+   - Added `just preseason-reversion` and `just preseason-reversion-vegas` commands
+   - Date completed: 2025-11-10
+   - See: `docs/preseason_mean_reversion.md` for full documentation
 
 ### Medium-term (High Value, High Effort)
 

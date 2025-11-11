@@ -152,6 +152,16 @@ collect-features start="2020" end="2024":
     @echo "Collecting enhanced features ({{start}}-{{end}})..."
     .venv/bin/python scripts/collect_enhanced_features.py --start {{start}} --end {{end}}
 
+# Preseason-Reversion: Apply mean reversion to ELO ratings for new season
+preseason-reversion:
+    @echo "Applying preseason mean reversion (FiveThirtyEight methodology)..."
+    uv run python scripts/apply_preseason_mean_reversion.py
+
+# Preseason-Reversion-Vegas: Apply mean reversion + Vegas win totals integration
+preseason-reversion-vegas:
+    @echo "Applying preseason mean reversion with Vegas integration..."
+    uv run python scripts/apply_preseason_mean_reversion.py --integrate-vegas
+
 # Temporal-CV: Run temporal cross-validation across historical seasons
 temporal-cv:
     @echo "Running temporal cross-validation..."
