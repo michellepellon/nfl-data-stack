@@ -28,20 +28,22 @@ def calc_elo_diff(
     visiting_elo: float,
     home_adv: float,
     scoring_margin: float,
+    contextual_adjustment: float = 0.0,
     k_factor: float = 20.0,
     elo_scale: float = 400.0,
     mov_multiplier_base: float = 2.2,
     mov_multiplier_divisor: float = 0.001
 ) -> float:
     """
-    Calculate ELO rating change with Margin-of-Victory multiplier
+    Calculate ELO rating change with Margin-of-Victory multiplier and contextual adjustments
 
     Parameters:
     - game_result: 1 if visiting team won, 0 if home team won, 0.5 for tie
     - home_elo: Home team's current ELO rating
     - visiting_elo: Visiting team's current ELO rating
-    - home_adv: Home field advantage (typically 52 points)
+    - home_adv: Home field advantage (typically 48 points)
     - scoring_margin: Absolute point differential
+    - contextual_adjustment: Travel/altitude/primetime adjustment (negative hurts away team)
     - k_factor: Learning rate (default 20)
     - elo_scale: ELO rating scale (default 400, where 400-point diff = 90% win prob)
     - mov_multiplier_base: MOV multiplier base constant (default 2.2, FiveThirtyEight formula)
@@ -54,7 +56,7 @@ def calc_elo_diff(
     elo_change = K * MOV_mult * (actual - expected)
 
     Where:
-    - expected = 1 / (1 + 10^(-(visiting_elo - home_elo - home_adv) / elo_scale))
+    - expected = 1 / (1 + 10^(-(visiting_elo - home_elo - home_adv - contextual_adj) / elo_scale))
     - MOV_mult = ln(|margin|+1) * (mov_base / (|elo_diff| * mov_div + mov_base))
     - elo_diff = winner_elo - loser_elo (accounts for upset magnitude)
     """
@@ -64,13 +66,16 @@ def calc_elo_diff(
     visiting_elo = float(visiting_elo)
     home_adv = float(home_adv)
     scoring_margin = float(scoring_margin)
+    contextual_adjustment = float(contextual_adjustment) if contextual_adjustment is not None else 0.0
     k_factor = float(k_factor)
     elo_scale = float(elo_scale)
     mov_multiplier_base = float(mov_multiplier_base)
     mov_multiplier_divisor = float(mov_multiplier_divisor)
 
-    # Adjusted home ELO (includes home field advantage)
-    adj_home_elo = home_elo + home_adv
+    # Adjusted home ELO (includes home field advantage and contextual adjustments)
+    # contextual_adjustment is negative when it hurts the away team, so we subtract it
+    # This effectively adds to home team's advantage
+    adj_home_elo = home_elo + home_adv - contextual_adjustment
 
     # Calculate ELO differential from winner's perspective
     # If visiting team won (game_result=1): visiting_elo - adj_home_elo
@@ -85,8 +90,8 @@ def calc_elo_diff(
         mov_multiplier_base / (winner_elo_diff * mov_multiplier_divisor + mov_multiplier_base)
     )
 
-    # Expected win probability for visiting team
-    expected_visiting_win = 1.0 / (10.0 ** (-(visiting_elo - home_elo - home_adv) / elo_scale) + 1.0)
+    # Expected win probability for visiting team (includes contextual adjustments)
+    expected_visiting_win = 1.0 / (10.0 ** (-(visiting_elo - home_elo - home_adv + contextual_adjustment) / elo_scale) + 1.0)
 
     # ELO change (from home team's perspective, negative means home team gains rating)
     # game_result: 1 = visiting team won, 0 = home team won
@@ -123,6 +128,17 @@ def model(dbt, sess):
     )
     nfl_elo_latest.execute()
 
+    # Load contextual adjustments (travel, altitude, primetime)
+    try:
+        contextual_adjustments = dbt.ref("nfl_travel_primetime").df()
+        contextual_dict = dict(zip(
+            contextual_adjustments["game_id"],
+            contextual_adjustments["total_contextual_adjustment"].fillna(0.0)
+        ))
+    except Exception:
+        # If contextual adjustments not available, use empty dict
+        contextual_dict = {}
+
     # Prepare output
     columns = [
         "game_id",
@@ -133,6 +149,7 @@ def model(dbt, sess):
         "winning_team",
         "elo_change",
         "margin",
+        "contextual_adjustment",
         "ingested_at"
     ]
     rows = []
@@ -149,21 +166,25 @@ def model(dbt, sess):
         if helo is None or velo is None:
             raise ValueError(f"Missing ELO rating for team: {hteam if helo is None else vteam}")
 
-        # Calculate ELO change with MOV multiplier
+        # Get contextual adjustment for this game (default to 0 if not found)
+        contextual_adj = contextual_dict.get(game_id, 0.0)
+
+        # Calculate ELO change with MOV multiplier and contextual adjustments
         elo_change = calc_elo_diff(
             game_result=game_result,
             home_elo=helo,
             visiting_elo=velo,
             home_adv=0 if neutral_site == 1 else home_adv,
             scoring_margin=margin,
+            contextual_adjustment=contextual_adj,
             k_factor=k_factor,
             elo_scale=elo_scale,
             mov_multiplier_base=mov_multiplier_base,
             mov_multiplier_divisor=mov_multiplier_divisor
         )
 
-        # Store pre-game ratings and ELO change
-        rows.append((game_id, vteam, velo, hteam, helo, winner, elo_change, margin, ingested_at))
+        # Store pre-game ratings, ELO change, and contextual adjustment
+        rows.append((game_id, vteam, velo, hteam, helo, winner, elo_change, margin, contextual_adj, ingested_at))
 
         # Update working ELO ratings for next game
         # elo_change is from home team's perspective (negative = home gains)

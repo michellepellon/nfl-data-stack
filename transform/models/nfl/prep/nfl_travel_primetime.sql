@@ -34,4 +34,4 @@ select
     -- Negative values hurt the away team (applied to away team's effective ELO)
     total_contextual_adjustment
 
-from {{ source('nfl', 'travel_primetime') }}
+from {{ source('nfl', 'nfl_travel_primetime') }}
