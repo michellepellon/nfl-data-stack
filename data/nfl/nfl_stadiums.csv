@@ -1,0 +1,37 @@
+stadium_id,stadium_name,team,city,state,latitude,longitude,altitude_ft,roof_type
+PHO00,State Farm Stadium,Arizona Cardinals,Glendale,AZ,33.5276,-112.2626,1117,retractable
+ATL97,Mercedes-Benz Stadium,Atlanta Falcons,Atlanta,GA,33.7553,-84.4006,1050,retractable
+BAL00,M&T Bank Stadium,Baltimore Ravens,Baltimore,MD,39.2780,-76.6227,33,outdoors
+BUF00,Highmark Stadium,Buffalo Bills,Orchard Park,NY,42.7738,-78.7870,630,outdoors
+CAR00,Bank of America Stadium,Carolina Panthers,Charlotte,NC,35.2258,-80.8528,748,outdoors
+CHI98,Soldier Field,Chicago Bears,Chicago,IL,41.8623,-87.6167,597,outdoors
+CIN00,Paycor Stadium,Cincinnati Bengals,Cincinnati,OH,39.0954,-84.5160,490,outdoors
+CLE00,Cleveland Browns Stadium,Cleveland Browns,Cleveland,OH,41.5061,-81.6995,653,outdoors
+DAL00,AT&T Stadium,Dallas Cowboys,Arlington,TX,32.7473,-97.0945,607,retractable
+DEN00,Empower Field at Mile High,Denver Broncos,Denver,CO,39.7439,-104.9964,5280,outdoors
+DET00,Ford Field,Detroit Lions,Detroit,MI,42.3400,-83.0456,600,dome
+GNB00,Lambeau Field,Green Bay Packers,Green Bay,WI,44.5013,-88.0622,640,outdoors
+HOU00,NRG Stadium,Houston Texans,Houston,TX,29.6847,-95.4107,50,retractable
+IND00,Lucas Oil Stadium,Indianapolis Colts,Indianapolis,IN,39.7601,-86.1639,718,retractable
+JAX00,EverBank Stadium,Jacksonville Jaguars,Jacksonville,FL,30.3239,-81.6373,16,outdoors
+KAN00,GEHA Field at Arrowhead Stadium,Kansas City Chiefs,Kansas City,MO,39.0489,-94.4839,750,outdoors
+LAX01,SoFi Stadium,Los Angeles Rams,Inglewood,CA,33.9535,-118.3392,107,dome
+LAX01,SoFi Stadium,Los Angeles Chargers,Inglewood,CA,33.9535,-118.3392,107,dome
+VEG00,Allegiant Stadium,Las Vegas Raiders,Las Vegas,NV,36.0909,-115.1833,2030,dome
+MIA00,Hard Rock Stadium,Miami Dolphins,Miami Gardens,FL,25.9580,-80.2389,10,outdoors
+MIN01,U.S. Bank Stadium,Minnesota Vikings,Minneapolis,MN,44.9738,-93.2575,840,dome
+BOS00,Gillette Stadium,New England Patriots,Foxborough,MA,42.0909,-71.2643,151,outdoors
+NOR00,Caesars Superdome,New Orleans Saints,New Orleans,LA,29.9511,-90.0812,3,dome
+NYC01,MetLife Stadium,New York Giants,East Rutherford,NJ,40.8128,-74.0742,10,outdoors
+NYC01,MetLife Stadium,New York Jets,East Rutherford,NJ,40.8128,-74.0742,10,outdoors
+PHI00,Lincoln Financial Field,Philadelphia Eagles,Philadelphia,PA,39.9008,-75.1675,36,outdoors
+PIT00,Acrisure Stadium,Pittsburgh Steelers,Pittsburgh,PA,40.4468,-80.0158,745,outdoors
+SEA00,Lumen Field,Seattle Seahawks,Seattle,WA,47.5952,-122.3316,16,outdoors
+SFO01,Levi's Stadium,San Francisco 49ers,Santa Clara,CA,37.4032,-121.9698,72,outdoors
+TAM00,Raymond James Stadium,Tampa Bay Buccaneers,Tampa,FL,27.9759,-82.5033,26,outdoors
+NAS00,Nissan Stadium,Tennessee Titans,Nashville,TN,36.1665,-86.7713,446,outdoors
+WAS00,Northwest Stadium,Washington Commanders,Landover,MD,38.9076,-76.8645,75,outdoors
+LON00,Wembley Stadium,International,London,UK,51.5559,-0.2795,49,outdoors
+LON02,Tottenham Hotspur Stadium,International,London,UK,51.6043,-0.0665,49,outdoors
+GER00,Allianz Arena,International,Munich,Germany,48.2188,11.6247,1706,retractable
+SAO00,Arena Corinthians,International,Sao Paulo,Brazil,-23.5454,-46.4730,2493,outdoors
