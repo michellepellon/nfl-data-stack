@@ -71,9 +71,9 @@ def generate_full_webpage_data():
     ratings_subset = ratings_subset.rename(columns={'win_total': 'vegas_preseason_total'})
     data["ratings"] = ratings_subset.to_dict('records')
 
-    # Get predictions for current week from simulator
-    sim_df = pd.read_parquet(data_dir / "nfl_reg_season_simulator.parquet")
-    current_week_df = sim_df[sim_df['week_number'] == current_week].copy()
+    # Get predictions for current week with feature adjustments
+    pred_df = pd.read_parquet(data_dir / "nfl_predictions_with_features.parquet")
+    current_week_df = pred_df[pred_df['week_number'] == current_week].copy()
 
     # Get actual results to join with predictions
     try:
@@ -108,14 +108,14 @@ def generate_full_webpage_data():
             'home_team': game_data['home_team'],
             'visiting_team_elo_rating': float(game_data['visiting_team_elo_rating']),
             'home_team_elo_rating': float(game_data['home_team_elo_rating']),
-            'home_win_probability': float(game_data['home_team_win_probability']) / 10000.0,
-            'predicted_winner': game_data['home_team'] if game_data['home_team_win_probability'] > 5000 else game_data['visiting_team'],
-            'rest_adj': 0.0,
-            'temp_adj': 0,
-            'wind_adj': 0,
-            'injury_adj': 0.0,
-            'total_adj': 0.0,
-            'confidence_adjusted': abs((float(game_data['home_team_win_probability']) / 10000.0) - 0.5),
+            'home_win_probability': float(game_data['home_win_prob_adjusted']),
+            'predicted_winner': game_data['predicted_winner_adjusted'],
+            'rest_adj': float(game_data.get('rest_adj', 0.0)),
+            'temp_adj': int(game_data.get('temp_adj', 0)),
+            'wind_adj': int(game_data.get('wind_adj', 0)),
+            'injury_adj': float(game_data.get('injury_adj', 0.0)),
+            'total_adj': float(game_data.get('total_adj', 0.0)),
+            'confidence_adjusted': float(game_data['confidence_adjusted']),
             'actual_home_score': int(actual_home_score) if actual_home_score is not None and pd.notna(actual_home_score) else None,
             'actual_away_score': int(actual_away_score) if actual_away_score is not None and pd.notna(actual_away_score) else None
         })

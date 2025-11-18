@@ -231,37 +231,50 @@ def collect_enhanced_features(
         (pl.col('home_rest') - pl.col('away_rest')).alias('rest_diff')
     )
 
-    # Load injuries
+    # Load injuries (if available)
     print("Loading injury data...")
-    injuries = nfl.load_injuries(seasons)
-    print(f"Loaded {len(injuries)} injury records")
+    try:
+        injuries = nfl.load_injuries(seasons)
+        print(f"Loaded {len(injuries)} injury records")
 
-    # Calculate injury scores
-    print("Calculating team injury scores...")
-    injury_scores = calculate_team_injury_scores(injuries)
-    print(f"Calculated injury scores for {len(injury_scores)} team-weeks")
+        # Calculate injury scores
+        print("Calculating team injury scores...")
+        injury_scores = calculate_team_injury_scores(injuries)
+        print(f"Calculated injury scores for {len(injury_scores)} team-weeks")
+    except (ConnectionError, Exception) as e:
+        print(f"Warning: Could not load injury data: {e}")
+        print("Continuing without injury data (injury scores will be 0)")
+        injury_scores = None
 
-    # Join home team injury scores
-    enhanced = enhanced.join(
-        injury_scores,
-        left_on=['season', 'home_team', 'week'],
-        right_on=['season', 'team', 'week'],
-        how='left'
-    ).rename({'injury_score': 'home_injury_score'})
+    # Join injury scores if available
+    if injury_scores is not None:
+        # Join home team injury scores
+        enhanced = enhanced.join(
+            injury_scores,
+            left_on=['season', 'home_team', 'week'],
+            right_on=['season', 'team', 'week'],
+            how='left'
+        ).rename({'injury_score': 'home_injury_score'})
 
-    # Join away team injury scores
-    enhanced = enhanced.join(
-        injury_scores,
-        left_on=['season', 'away_team', 'week'],
-        right_on=['season', 'team', 'week'],
-        how='left'
-    ).rename({'injury_score': 'away_injury_score'})
+        # Join away team injury scores
+        enhanced = enhanced.join(
+            injury_scores,
+            left_on=['season', 'away_team', 'week'],
+            right_on=['season', 'team', 'week'],
+            how='left'
+        ).rename({'injury_score': 'away_injury_score'})
 
-    # Fill missing injury scores with 0 (no injuries reported)
-    enhanced = enhanced.with_columns([
-        pl.col('home_injury_score').fill_null(0.0),
-        pl.col('away_injury_score').fill_null(0.0),
-    ])
+        # Fill missing injury scores with 0 (no injuries reported)
+        enhanced = enhanced.with_columns([
+            pl.col('home_injury_score').fill_null(0.0),
+            pl.col('away_injury_score').fill_null(0.0),
+        ])
+    else:
+        # No injury data available - set to 0
+        enhanced = enhanced.with_columns([
+            pl.lit(0.0).alias('home_injury_score'),
+            pl.lit(0.0).alias('away_injury_score'),
+        ])
 
     # Calculate injury differential
     enhanced = enhanced.with_columns(
