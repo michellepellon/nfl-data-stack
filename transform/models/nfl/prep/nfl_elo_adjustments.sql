@@ -12,13 +12,18 @@ Adjustments are applied to the home team's ELO advantage:
 - Positive adjustment = favors home team
 - Negative adjustment = favors away team
 
-Adjustment Ranges:
-- Rest: ±20 ELO points (5 points per day of rest advantage)
-- Temperature: -10 to 0 (outdoor only, symmetric penalty for extreme conditions)
-- Wind: -15 to 0 (outdoor only, symmetric penalty for high wind)
+Adjustment Ranges (RECALIBRATED v2 - more aggressive):
+- Rest: ±40 ELO points (10 points per day of rest advantage) - DOUBLED from ±20
+- Temperature: -20 to +15 (asymmetric - home advantage in extreme cold if outdoor team)
+- Wind: -25 to +10 (asymmetric - home advantage in high wind if outdoor stadium)
 - Injuries: ±60 ELO points (1.5x injury score differential)
 
-Total possible range: -105 to +80 ELO points
+Total possible range: -145 to +125 ELO points
+
+Rationale for asymmetric weather:
+- Week 11 analysis showed symmetric penalties went wrong direction 57% of time
+- Outdoor home teams are acclimated to their weather conditions
+- Dome teams traveling to cold/windy outdoor games face disadvantage
 */
 
 with features as (
@@ -33,28 +38,36 @@ adjustments as (
         home_team,
         away_team,
 
-        -- Rest adjustment (±20 cap)
-        -- 5 ELO points per day of rest advantage
-        greatest(-20, least(20, rest_diff * 5.0)) as rest_adjustment,
+        -- Rest adjustment (±40 cap) - DOUBLED
+        -- 10 ELO points per day of rest advantage
+        greatest(-40, least(40, rest_diff * 10.0)) as rest_adjustment,
 
-        -- Temperature adjustment (outdoor only, symmetric)
-        -- Extreme conditions hurt both teams equally
+        -- Temperature adjustment (asymmetric - home advantage in extreme cold)
+        -- Outdoor home teams acclimated to weather, dome teams struggle in cold
         case
             when roof in ('dome', 'closed') then 0
             when temp is null then 0
-            when temp < 32 then -10  -- Extreme cold
-            when temp < 50 then -5   -- Moderate cold
-            when temp > 75 then -3   -- Heat
+            when temp < 32 then
+                -- Extreme cold: +15 for outdoor home, -20 for dome home
+                case when roof = 'outdoors' then 15 else -20 end
+            when temp < 50 then
+                -- Moderate cold: +5 for outdoor home, -10 for dome home
+                case when roof = 'outdoors' then 5 else -10 end
+            when temp > 75 then -5   -- Heat (symmetric penalty)
             else 0                   -- Ideal conditions
         end as temp_adjustment,
 
-        -- Wind adjustment (outdoor only, symmetric)
-        -- High wind reduces passing effectiveness for both teams
+        -- Wind adjustment (asymmetric - home advantage in high wind)
+        -- Outdoor home teams used to wind, dome teams not
         case
             when roof in ('dome', 'closed') then 0
             when wind is null then 0
-            when wind >= 20 then -15  -- Severe wind
-            when wind >= 10 then -5   -- Moderate wind
+            when wind >= 20 then
+                -- Severe wind: +10 for outdoor home, -25 for dome home
+                case when roof = 'outdoors' then 10 else -25 end
+            when wind >= 10 then
+                -- Moderate wind: +5 for outdoor home, -10 for dome home
+                case when roof = 'outdoors' then 5 else -10 end
             else 0                    -- Calm
         end as wind_adjustment,
 
