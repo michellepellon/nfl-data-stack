@@ -18,7 +18,6 @@ with predictions as (
 game_predictions as (
     select
         week_number,
-        season,
         game_id,
 
         -- Game teams
@@ -47,13 +46,12 @@ game_predictions as (
 
     from predictions
     where week_number is not null
-    group by week_number, season, game_id
+    group by week_number, game_id
 ),
 
 formatted_picks as (
     select
         week_number,
-        season,
         game_id,
 
         -- Determine predicted winner and format matchup

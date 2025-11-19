@@ -17,7 +17,6 @@ with picks as (
 weekly_stats as (
     select
         week_number,
-        season,
 
         -- Game counts by confidence
         count(*) as total_games,
@@ -57,8 +56,8 @@ weekly_stats as (
         {{ add_ingestion_timestamp() }}
 
     from picks
-    group by week_number, season
+    group by week_number
 )
 
 select * from weekly_stats
-order by season, week_number
+order by week_number

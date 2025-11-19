@@ -18,6 +18,14 @@ adjustments as (
     select * from {{ ref('nfl_elo_adjustments') }}
 ),
 
+recent_form as (
+    select * from {{ ref('nfl_recent_form') }}
+),
+
+vegas_lines as (
+    select * from {{ ref('nfl_vegas_lines') }}
+),
+
 ratings as (
     select
         team,
@@ -34,8 +42,6 @@ select
     -- Game identifiers
     p.game_id,
     p.week_number,
-    -- Season (current NFL season)
-    2025 as season,
     p.type as game_type,
 
     -- Home team
@@ -68,6 +74,11 @@ select
     coalesce(adj.injury_adjustment, 0) as injury_adj,
     coalesce(adj.total_adjustment, 0) as total_adj,
 
+    -- Momentum adjustments (recent form)
+    coalesce(home_form.total_momentum_adjustment, 0) as home_momentum_adj,
+    coalesce(away_form.total_momentum_adjustment, 0) as away_momentum_adj,
+    coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) as momentum_diff,
+
     -- Feature metadata (for explanatory tooltips)
     adj.rest_diff as rest_days_diff,
     adj.roof as roof_type,
@@ -79,24 +90,67 @@ select
 
     -- Adjusted ELO difference and probability
     -- (Adjustment is added to home advantage, affecting effective ELO diff)
-    p.elo_diff + coalesce(adj.total_adjustment, 0) as elo_diff_adjusted,
+    p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) as elo_diff_adjusted,
 
     -- Calculate adjusted win probability using logistic function
     -- P(home wins) = 1 / (1 + 10^(-(elo_diff_adjusted + home_adv) / 400))
     -- Using standard 52 home advantage
-    1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + 52) / 400.0))) as home_win_prob_adjusted,
+    -- Now includes: contextual features + momentum
+    1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0))) as home_win_prob_adjusted,
 
     -- Predicted winner
     p.winning_team,
     case
-        when (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + 52) / 400.0)))) > 0.5
+        when (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) > 0.5
         then p.home_team
         else p.visiting_team
     end as predicted_winner_adjusted,
 
     -- Prediction confidence (distance from 50%)
     abs((p.home_team_win_probability / 10000.0) - 0.5) * 2 as confidence_base,
-    abs((1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + 52) / 400.0)))) - 0.5) * 2 as confidence_adjusted,
+    abs((1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) - 0.5) * 2 as confidence_adjusted,
+
+    -- Vegas lines
+    vegas.home_spread,
+    vegas.home_moneyline,
+    vegas.home_win_prob_consensus as vegas_home_win_prob,
+
+    -- Ensemble prediction (weighted average of ELO + momentum and Vegas)
+    -- When Vegas is available: 50% model (ELO + features + momentum) + 50% Vegas
+    -- When Vegas is not available: 100% model
+    case
+        when vegas.home_win_prob_consensus is not null then
+            0.50 * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) +
+            0.50 * vegas.home_win_prob_consensus
+        else
+            1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))
+    end as home_win_prob_ensemble,
+
+    -- Ensemble predicted winner
+    case
+        when vegas.home_win_prob_consensus is not null then
+            case
+                when (0.50 * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) + 0.50 * vegas.home_win_prob_consensus) > 0.5
+                then p.home_team
+                else p.visiting_team
+            end
+        else
+            case
+                when (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) > 0.5
+                then p.home_team
+                else p.visiting_team
+            end
+    end as predicted_winner_ensemble,
+
+    -- Ensemble confidence
+    abs(
+        case
+            when vegas.home_win_prob_consensus is not null then
+                (0.50 * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) + 0.50 * vegas.home_win_prob_consensus)
+            else
+                (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0))))
+        end - 0.5
+    ) * 2 as confidence_ensemble,
 
     -- Simulation metadata
     p.occurances as sim_count,
@@ -109,5 +163,17 @@ left join adjustments adj
     on p.week_number = adj.week
     and p.home_short = adj.home_team
     and p.vis_short = adj.away_team
+left join recent_form home_form
+    on p.week_number = home_form.week_number
+    and p.home_team = home_form.team
+    and p.type = 'reg_season'  -- Only for regular season
+left join recent_form away_form
+    on p.week_number = away_form.week_number
+    and p.visiting_team = away_form.team
+    and p.type = 'reg_season'  -- Only for regular season
 left join ratings home_ratings on p.home_team = home_ratings.team
 left join ratings vis_ratings on p.visiting_team = vis_ratings.team
+left join vegas_lines vegas
+    on p.week_number = vegas.week_number
+    and p.home_team = vegas.home_team
+    and p.visiting_team = vegas.visiting_team
