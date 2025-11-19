@@ -120,14 +120,23 @@ def generate_full_webpage_data():
             'home_team': game_data['home_team'],
             'visiting_team_elo_rating': float(game_data['visiting_team_elo_rating']),
             'home_team_elo_rating': float(game_data['home_team_elo_rating']),
-            'home_win_probability': float(game_data['home_win_prob_adjusted']),
-            'predicted_winner': game_data['predicted_winner_adjusted'],
+            # Use ensemble probability (combines model + Vegas when available)
+            'home_win_probability': float(game_data['home_win_prob_ensemble']),
+            'predicted_winner': game_data['predicted_winner_ensemble'],
+            # Model components
+            'model_home_win_prob': float(game_data['home_win_prob_adjusted']),
+            'vegas_home_win_prob': float(game_data['vegas_home_win_prob']) if pd.notna(game_data.get('vegas_home_win_prob')) else None,
+            'home_spread': float(game_data['home_spread']) if pd.notna(game_data.get('home_spread')) else None,
+            # Adjustments
             'rest_adj': float(game_data.get('rest_adj', 0.0)),
             'temp_adj': int(game_data.get('temp_adj', 0)),
             'wind_adj': int(game_data.get('wind_adj', 0)),
             'injury_adj': float(game_data.get('injury_adj', 0.0)),
             'total_adj': float(game_data.get('total_adj', 0.0)),
-            'confidence_adjusted': float(game_data['confidence_adjusted']),
+            'home_momentum_adj': float(game_data.get('home_momentum_adj', 0.0)),
+            'away_momentum_adj': float(game_data.get('away_momentum_adj', 0.0)),
+            'momentum_diff': float(game_data.get('momentum_diff', 0.0)),
+            'confidence_ensemble': float(game_data['confidence_ensemble']),
             'actual_home_score': int(actual_home_score) if actual_home_score is not None and pd.notna(actual_home_score) else None,
             'actual_away_score': int(actual_away_score) if actual_away_score is not None and pd.notna(actual_away_score) else None
         })
