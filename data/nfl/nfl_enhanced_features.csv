@@ -163,20 +163,20 @@ game_id,season,week,home_team,away_team,home_rest,away_rest,roof,temp,wind,stadi
 2025_11_KC_DEN,2025,11,DEN,KC,10,14,outdoors,70,6,DEN00,Empower Field at Mile High,-4,0.0,0.0,0.0
 2025_11_DET_PHI,2025,11,PHI,DET,6,7,outdoors,45,15,PHI00,Lincoln Financial Field,-1,0.0,0.0,0.0
 2025_11_DAL_LV,2025,11,LV,DAL,11,14,dome,,,VEG00,Allegiant Stadium,-3,0.0,0.0,0.0
-2025_12_BUF_HOU,2025,12,HOU,BUF,4,4,closed,,,HOU00,NRG Stadium,0,0.0,0.0,0.0
-2025_12_NYJ_BAL,2025,12,BAL,NYJ,7,10,outdoors,,,BAL00,M&T Bank Stadium,-3,0.0,0.0,0.0
-2025_12_PIT_CHI,2025,12,CHI,PIT,7,7,outdoors,,,CHI98,Soldier Field,0,0.0,0.0,0.0
-2025_12_NE_CIN,2025,12,CIN,NE,7,10,outdoors,,,CIN00,Paycor Stadium,-3,0.0,0.0,0.0
+2025_12_BUF_HOU,2025,12,HOU,BUF,4,4,closed,85,10,HOU00,NRG Stadium,0,0.0,0.0,0.0
+2025_12_NYJ_BAL,2025,12,BAL,NYJ,7,10,outdoors,48,6,BAL00,M&T Bank Stadium,-3,0.0,0.0,0.0
+2025_12_PIT_CHI,2025,12,CHI,PIT,7,7,outdoors,45,5,CHI98,Soldier Field,0,0.0,0.0,0.0
+2025_12_NE_CIN,2025,12,CIN,NE,7,10,outdoors,48,2,CIN00,Paycor Stadium,-3,0.0,0.0,0.0
 2025_12_NYG_DET,2025,12,DET,NYG,7,7,dome,,,DET00,Ford Field,0,0.0,0.0,0.0
-2025_12_MIN_GB,2025,12,GB,MIN,7,7,outdoors,,,GNB00,Lambeau Field,0,0.0,0.0,0.0
-2025_12_IND_KC,2025,12,KC,IND,7,14,outdoors,,,KAN00,GEHA Field at Arrowhead Stadium,-7,0.0,0.0,0.0
-2025_12_SEA_TEN,2025,12,TEN,SEA,7,7,outdoors,,,NAS00,Nissan Stadium,0,0.0,0.0,0.0
-2025_12_JAX_ARI,2025,12,ARI,JAX,7,7,closed,,,PHO00,State Farm Stadium,0,0.0,0.0,0.0
+2025_12_MIN_GB,2025,12,GB,MIN,7,7,outdoors,40,3,GNB00,Lambeau Field,0,0.0,0.0,0.0
+2025_12_IND_KC,2025,12,KC,IND,7,14,outdoors,58,3,KAN00,GEHA Field at Arrowhead Stadium,-7,0.0,0.0,0.0
+2025_12_SEA_TEN,2025,12,TEN,SEA,7,7,outdoors,75,5,NAS00,Nissan Stadium,0,0.0,0.0,0.0
+2025_12_JAX_ARI,2025,12,ARI,JAX,7,7,closed,65,5,PHO00,State Farm Stadium,0,0.0,0.0,0.0
 2025_12_CLE_LV,2025,12,LV,CLE,6,7,dome,,,VEG00,Allegiant Stadium,-1,0.0,0.0,0.0
-2025_12_PHI_DAL,2025,12,DAL,PHI,6,7,closed,,,DAL00,AT&T Stadium,-1,0.0,0.0,0.0
+2025_12_PHI_DAL,2025,12,DAL,PHI,6,7,closed,84,10,DAL00,AT&T Stadium,-1,0.0,0.0,0.0
 2025_12_ATL_NO,2025,12,NO,ATL,14,7,dome,,,NOR00,Mercedes-Benz Superdome,7,0.0,0.0,0.0
 2025_12_TB_LA,2025,12,LA,TB,7,7,dome,,,LAX01,SoFi Stadium,0,0.0,0.0,0.0
-2025_12_CAR_SF,2025,12,SF,CAR,8,8,outdoors,,,SFO01,Levi's Stadium,0,0.0,0.0,0.0
+2025_12_CAR_SF,2025,12,SF,CAR,8,8,outdoors,60,10,SFO01,Levi's Stadium,0,0.0,0.0,0.0
 2025_13_GB_DET,2025,13,DET,GB,4,4,dome,,,DET00,Ford Field,0,0.0,0.0,0.0
 2025_13_KC_DAL,2025,13,DAL,KC,4,4,closed,,,DAL00,AT&T Stadium,0,0.0,0.0,0.0
 2025_13_CIN_BAL,2025,13,BAL,CIN,4,4,outdoors,,,BAL00,M&T Bank Stadium,0,0.0,0.0,0.0

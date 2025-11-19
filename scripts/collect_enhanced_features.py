@@ -24,6 +24,42 @@ from typing import Any
 import nflreadpy as nfl
 import polars as pl
 
+# Team name mapping (full name -> abbreviation)
+TEAM_NAME_MAP = {
+    'Arizona Cardinals': 'ARI',
+    'Atlanta Falcons': 'ATL',
+    'Baltimore Ravens': 'BAL',
+    'Buffalo Bills': 'BUF',
+    'Carolina Panthers': 'CAR',
+    'Chicago Bears': 'CHI',
+    'Cincinnati Bengals': 'CIN',
+    'Cleveland Browns': 'CLE',
+    'Dallas Cowboys': 'DAL',
+    'Denver Broncos': 'DEN',
+    'Detroit Lions': 'DET',
+    'Green Bay Packers': 'GB',
+    'Houston Texans': 'HOU',
+    'Indianapolis Colts': 'IND',
+    'Jacksonville Jaguars': 'JAX',
+    'Kansas City Chiefs': 'KC',
+    'Las Vegas Raiders': 'LV',
+    'Los Angeles Chargers': 'LAC',
+    'Los Angeles Rams': 'LA',
+    'Miami Dolphins': 'MIA',
+    'Minnesota Vikings': 'MIN',
+    'New England Patriots': 'NE',
+    'New Orleans Saints': 'NO',
+    'New York Giants': 'NYG',
+    'New York Jets': 'NYJ',
+    'Philadelphia Eagles': 'PHI',
+    'Pittsburgh Steelers': 'PIT',
+    'San Francisco 49ers': 'SF',
+    'Seattle Seahawks': 'SEA',
+    'Tampa Bay Buccaneers': 'TB',
+    'Tennessee Titans': 'TEN',
+    'Washington Commanders': 'WAS',
+}
+
 # Position weights (out of 100 total impact points)
 POSITION_WEIGHTS = {
     'QB': 40.0,
@@ -231,6 +267,76 @@ def collect_enhanced_features(
         (pl.col('home_rest') - pl.col('away_rest')).alias('rest_diff')
     )
 
+    # Merge weather forecasts for future weeks (weeks without historical data)
+    print("Checking for weather forecasts...")
+    data_dir = Path(__file__).parent.parent / 'data' / 'nfl'
+    forecast_files = list(data_dir.glob('weather_forecasts_week*.csv'))
+
+    if forecast_files:
+        print(f"Found {len(forecast_files)} forecast files")
+        for forecast_file in forecast_files:
+            try:
+                forecasts = pl.read_csv(forecast_file)
+                print(f"  Loading {forecast_file.name}: {len(forecasts)} games")
+
+                # Convert full team names to abbreviations
+                forecasts = forecasts.with_columns(
+                    pl.col('home_team').map_elements(
+                        lambda name: TEAM_NAME_MAP.get(name, name),
+                        return_dtype=pl.Utf8
+                    ).alias('home_team'),
+                    pl.col('away_team').map_elements(
+                        lambda name: TEAM_NAME_MAP.get(name, name),
+                        return_dtype=pl.Utf8
+                    ).alias('away_team')
+                )
+
+                print(f"  Forecast teams after conversion: {sorted(forecasts['home_team'].unique().to_list())}")
+                print(f"  Forecast weeks: {sorted(forecasts['week'].unique().to_list())}")
+
+                # Merge forecasts by week and home_team (game_id formats don't match)
+                # nflverse uses "2025_12_BUF_HOU", we use sequential numbers
+                enhanced = enhanced.join(
+                    forecasts.select(['week', 'home_team', 'temperature', 'wind_speed', 'roof']),
+                    on=['week', 'home_team'],
+                    how='left',
+                    suffix='_forecast'
+                )
+
+                # Debug: Check how many forecasts matched
+                matched = enhanced.filter(pl.col('temperature').is_not_null())
+                print(f"  Matched {len(matched)} games with forecasts")
+
+                # Use forecast data if original is null
+                enhanced = enhanced.with_columns([
+                    pl.when(pl.col('temp').is_null())
+                      .then(pl.col('temperature'))
+                      .otherwise(pl.col('temp'))
+                      .alias('temp'),
+                    pl.when(pl.col('wind').is_null())
+                      .then(pl.col('wind_speed'))
+                      .otherwise(pl.col('wind'))
+                      .alias('wind'),
+                    pl.when(pl.col('roof').is_null())
+                      .then(pl.col('roof_forecast'))
+                      .otherwise(pl.col('roof'))
+                      .alias('roof'),
+                ])
+
+                # Debug: Check HOU game after transformation
+                hou_check = enhanced.filter((pl.col('week') == 12) & (pl.col('home_team') == 'HOU'))
+                if len(hou_check) > 0:
+                    print(f"  HOU game after transformation: temp={hou_check['temp'][0]}, wind={hou_check['wind'][0]}")
+
+                # Drop forecast columns
+                enhanced = enhanced.drop(['temperature', 'wind_speed', 'roof_forecast'])
+
+                print(f"  ✓ Merged forecasts")
+            except Exception as e:
+                print(f"  Warning: Could not merge {forecast_file.name}: {e}")
+    else:
+        print("  No forecast files found (future weeks will have null weather)")
+
     # Load injuries (if available)
     print("Loading injury data...")
     try:
@@ -281,6 +387,12 @@ def collect_enhanced_features(
         (pl.col('away_injury_score') - pl.col('home_injury_score')).alias('injury_diff')
     )
 
+    # Cast temp and wind back to Int32 to match original schema
+    enhanced = enhanced.with_columns([
+        pl.col('temp').cast(pl.Int32, strict=False),
+        pl.col('wind').cast(pl.Int32, strict=False),
+    ])
+
     # Summary statistics
     print("\n" + "="*80)
     print("ENHANCED FEATURES SUMMARY")
@@ -307,6 +419,11 @@ def collect_enhanced_features(
     print(f"Mean injury score (home): {enhanced['home_injury_score'].mean():.1f}")
     print(f"Mean injury score (away): {enhanced['away_injury_score'].mean():.1f}")
     print(f"Max injury score: {max(enhanced['home_injury_score'].max(), enhanced['away_injury_score'].max()):.1f}")
+
+    # Debug: Show Week 12 data before export
+    week12_debug = enhanced.filter(pl.col('week') == 12)
+    print(f"\nWeek 12 data check (showing first 3 games):")
+    print(week12_debug.select(['home_team', 'away_team', 'temp', 'wind']).head(3))
 
     # Export to CSV
     print(f"\nExporting to {output_path}...")

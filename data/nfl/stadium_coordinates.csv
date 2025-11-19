@@ -1,0 +1,33 @@
+team,stadium_name,city,state,latitude,longitude,roof_type
+Arizona Cardinals,State Farm Stadium,Glendale,AZ,33.5276,-112.2626,retractable
+Atlanta Falcons,Mercedes-Benz Stadium,Atlanta,GA,33.7553,-84.4008,retractable
+Baltimore Ravens,M&T Bank Stadium,Baltimore,MD,39.2780,-76.6227,outdoors
+Buffalo Bills,Highmark Stadium,Orchard Park,NY,42.7738,-78.7870,outdoors
+Carolina Panthers,Bank of America Stadium,Charlotte,NC,35.2258,-80.8528,outdoors
+Chicago Bears,Soldier Field,Chicago,IL,41.8623,-87.6167,outdoors
+Cincinnati Bengals,Paycor Stadium,Cincinnati,OH,39.0954,-84.5160,outdoors
+Cleveland Browns,Cleveland Browns Stadium,Cleveland,OH,41.5061,-81.6995,outdoors
+Dallas Cowboys,AT&T Stadium,Arlington,TX,32.7473,-97.0945,retractable
+Denver Broncos,Empower Field at Mile High,Denver,CO,39.7439,-105.0201,outdoors
+Detroit Lions,Ford Field,Detroit,MI,42.3400,-83.0456,dome
+Green Bay Packers,Lambeau Field,Green Bay,WI,44.5013,-88.0622,outdoors
+Houston Texans,NRG Stadium,Houston,TX,29.6847,-95.4107,retractable
+Indianapolis Colts,Lucas Oil Stadium,Indianapolis,IN,39.7601,-86.1639,retractable
+Jacksonville Jaguars,TIAA Bank Field,Jacksonville,FL,30.3239,-81.6373,outdoors
+Kansas City Chiefs,GEHA Field at Arrowhead Stadium,Kansas City,MO,39.0489,-94.4839,outdoors
+Las Vegas Raiders,Allegiant Stadium,Las Vegas,NV,36.0909,-115.1833,dome
+Los Angeles Chargers,SoFi Stadium,Inglewood,CA,33.9535,-118.3392,dome
+Los Angeles Rams,SoFi Stadium,Inglewood,CA,33.9535,-118.3392,dome
+Miami Dolphins,Hard Rock Stadium,Miami Gardens,FL,25.9580,-80.2389,outdoors
+Minnesota Vikings,U.S. Bank Stadium,Minneapolis,MN,44.9738,-93.2575,dome
+New England Patriots,Gillette Stadium,Foxborough,MA,42.0909,-71.2643,outdoors
+New Orleans Saints,Caesars Superdome,New Orleans,LA,29.9511,-90.0812,dome
+New York Giants,MetLife Stadium,East Rutherford,NJ,40.8128,-74.0742,outdoors
+New York Jets,MetLife Stadium,East Rutherford,NJ,40.8128,-74.0742,outdoors
+Philadelphia Eagles,Lincoln Financial Field,Philadelphia,PA,39.9008,-75.1675,outdoors
+Pittsburgh Steelers,Acrisure Stadium,Pittsburgh,PA,40.4468,-80.0158,outdoors
+San Francisco 49ers,Levi's Stadium,Santa Clara,CA,37.4032,-121.9698,outdoors
+Seattle Seahawks,Lumen Field,Seattle,WA,47.5952,-122.3316,outdoors
+Tampa Bay Buccaneers,Raymond James Stadium,Tampa,FL,27.9759,-82.5033,outdoors
+Tennessee Titans,Nissan Stadium,Nashville,TN,36.1665,-86.7713,outdoors
+Washington Commanders,Northwest Stadium,Landover,MD,38.9076,-76.8645,outdoors

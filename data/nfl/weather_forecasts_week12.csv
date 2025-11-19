@@ -1,0 +1,15 @@
+week,game_id,home_team,away_team,stadium_name,latitude,longitude,roof,temperature,wind_speed,forecast_time,short_forecast,collected_at
+12,165,Houston Texans,Buffalo Bills,NRG Stadium,29.6847,-95.4107,retractable,85.0,10.0,2025-11-19T16:00:00-06:00,Partly Sunny,2025-11-19T16:15:25.600195
+12,172,Baltimore Ravens,New York Jets,M&T Bank Stadium,39.278,-76.6227,outdoors,48.0,6.0,2025-11-19T17:00:00-05:00,Mostly Cloudy,2025-11-19T16:15:26.376515
+12,176,New Orleans Saints,Atlanta Falcons,Caesars Superdome,29.9511,-90.0812,dome,,,,,2025-11-19T16:15:26.376795
+12,177,Los Angeles Rams,Tampa Bay Buccaneers,SoFi Stadium,33.9535,-118.3392,dome,,,,,2025-11-19T16:15:26.376901
+12,178,San Francisco 49ers,Carolina Panthers,Levi's Stadium,37.4032,-121.9698,outdoors,60.0,10.0,2025-11-19T14:00:00-08:00,Partly Sunny,2025-11-19T16:15:27.192953
+12,168,Detroit Lions,New York Giants,Ford Field,42.34,-83.0456,dome,,,,,2025-11-19T16:15:27.193616
+12,169,Green Bay Packers,Minnesota Vikings,Lambeau Field,44.5013,-88.0622,outdoors,40.0,3.0,2025-11-19T16:00:00-06:00,Mostly Cloudy,2025-11-19T16:15:27.988143
+12,174,Las Vegas Raiders,Cleveland Browns,Allegiant Stadium,36.0909,-115.1833,dome,,,,,2025-11-19T16:15:27.988457
+12,167,Cincinnati Bengals,New England Patriots,Paycor Stadium,39.0954,-84.516,outdoors,48.0,2.0,2025-11-19T16:00:00-05:00,Cloudy,2025-11-19T16:15:28.754029
+12,170,Kansas City Chiefs,Indianapolis Colts,GEHA Field at Arrowhead Stadium,39.0489,-94.4839,outdoors,58.0,3.0,2025-11-19T16:00:00-06:00,Partly Sunny,2025-11-19T16:15:29.494472
+12,171,Tennessee Titans,Seattle Seahawks,Nissan Stadium,36.1665,-86.7713,outdoors,75.0,5.0,2025-11-19T15:00:00-06:00,Mostly Cloudy,2025-11-19T16:15:30.278199
+12,173,Arizona Cardinals,Jacksonville Jaguars,State Farm Stadium,33.5276,-112.2626,retractable,65.0,5.0,2025-11-19T15:00:00-07:00,Showers And Thunderstorms Likely,2025-11-19T16:15:31.067748
+12,175,Dallas Cowboys,Philadelphia Eagles,AT&T Stadium,32.7473,-97.0945,retractable,84.0,10.0,2025-11-19T16:00:00-06:00,Slight Chance Rain Showers,2025-11-19T16:15:31.831683
+12,166,Chicago Bears,Pittsburgh Steelers,Soldier Field,41.8623,-87.6167,outdoors,45.0,5.0,2025-11-19T16:00:00-06:00,Cloudy,2025-11-19T16:15:32.580288
