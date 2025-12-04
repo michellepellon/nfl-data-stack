@@ -150,19 +150,19 @@ def generate_full_webpage_data():
         calibration_records = []
         for _, row in calibration_df.iterrows():
             calibration_records.append({
-                'bin_lower': float(row['bin_lower']) / 100.0,
-                'bin_upper': float(row['bin_upper']) / 100.0,
-                'bin_midpoint': (float(row['bin_lower']) + float(row['bin_upper'])) / 200.0,
-                'mean_predicted': float(row['avg_predicted_pct']) / 100.0,
-                'mean_observed': float(row['actual_win_rate_pct']) / 100.0,
-                'n_predictions': int(row['n_games']),
-                'stddev_observed': 0.0,
-                'se_observed': 0.0,
-                'ci_lower': 0.0,
-                'ci_upper': 0.0,
-                'perfect_calibration': (float(row['bin_lower']) + float(row['bin_upper'])) / 200.0,
-                'calibration_error': float(row['calibration_error_pct']) / 100.0,
-                'ingested_at': datetime.now().isoformat()
+                'bin_lower': float(row['bin_lower']),
+                'bin_upper': float(row['bin_upper']),
+                'bin_midpoint': float(row['bin_midpoint']),
+                'mean_predicted': float(row['mean_predicted']),
+                'mean_observed': float(row['mean_observed']),
+                'n_predictions': int(row['n_predictions']),
+                'stddev_observed': float(row['stddev_observed']),
+                'se_observed': float(row['se_observed']),
+                'ci_lower': float(row['ci_lower']),
+                'ci_upper': float(row['ci_upper']),
+                'perfect_calibration': float(row['perfect_calibration']),
+                'calibration_error': float(row['calibration_error']),
+                'ingested_at': str(row['ingested_at'])
             })
         data["calibration"] = calibration_records
     except Exception as e:
