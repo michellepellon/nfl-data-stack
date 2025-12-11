@@ -59,13 +59,15 @@ def generate_full_webpage_data():
     # Show predictions for upcoming week if current week is complete
     # Check if there are any uncompleted games in current week
     results_df = pd.read_parquet(data_dir / "nfl_latest_results.parquet")
-    current_week_uncompleted = results_df[
-        (results_df['week_number'] == current_week) &
-        (results_df['visiting_team_score'].isna() | results_df['home_team_score'].isna())
+    current_week_results = results_df[results_df['week_number'] == current_week]
+    current_week_uncompleted = current_week_results[
+        current_week_results['visiting_team_score'].isna() |
+        current_week_results['home_team_score'].isna()
     ]
 
-    # If current week has no uncompleted games, show next week
-    if len(current_week_uncompleted) == 0:
+    # Only advance if current week has games AND all are completed
+    # (If 0 games in results, the week hasn't started yet - stay on current week)
+    if len(current_week_results) > 0 and len(current_week_uncompleted) == 0:
         current_week = min(current_week + 1, 18)
 
     data = {
