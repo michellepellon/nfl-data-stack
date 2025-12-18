@@ -26,6 +26,10 @@ vegas_lines as (
     select * from {{ ref('nfl_vegas_lines') }}
 ),
 
+dynamic_weights as (
+    select * from {{ ref('nfl_dynamic_weights') }}
+),
+
 ratings as (
     select
         team,
@@ -115,13 +119,18 @@ select
     vegas.home_moneyline,
     vegas.home_win_prob_consensus as vegas_home_win_prob,
 
-    -- Ensemble prediction (weighted average of ELO + momentum and Vegas)
-    -- When Vegas is available: 50% model (ELO + features + momentum) + 50% Vegas
-    -- When Vegas is not available: 100% model
+    -- Dynamic ensemble weights (based on rolling 4-week performance)
+    -- Defaults to 0.5/0.5 during cold start or when weights unavailable
+    coalesce(dw.elo_weight, 0.5) as elo_weight,
+    coalesce(dw.vegas_weight, 0.5) as vegas_weight,
+    coalesce(dw.is_cold_start, true) as weights_cold_start,
+
+    -- Ensemble prediction (dynamic weighted average of ELO + momentum and Vegas)
+    -- Uses performance-based weights instead of fixed 50/50
     case
         when vegas.home_win_prob_consensus is not null then
-            0.50 * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) +
-            0.50 * vegas.home_win_prob_consensus
+            coalesce(dw.elo_weight, 0.5) * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) +
+            coalesce(dw.vegas_weight, 0.5) * vegas.home_win_prob_consensus
         else
             1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))
     end as home_win_prob_ensemble,
@@ -130,7 +139,7 @@ select
     case
         when vegas.home_win_prob_consensus is not null then
             case
-                when (0.50 * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) + 0.50 * vegas.home_win_prob_consensus) > 0.5
+                when (coalesce(dw.elo_weight, 0.5) * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) + coalesce(dw.vegas_weight, 0.5) * vegas.home_win_prob_consensus) > 0.5
                 then p.home_team
                 else p.visiting_team
             end
@@ -146,7 +155,7 @@ select
     abs(
         case
             when vegas.home_win_prob_consensus is not null then
-                (0.50 * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) + 0.50 * vegas.home_win_prob_consensus)
+                (coalesce(dw.elo_weight, 0.5) * (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0)))) + coalesce(dw.vegas_weight, 0.5) * vegas.home_win_prob_consensus)
             else
                 (1.0 / (1.0 + power(10, -((p.elo_diff + coalesce(adj.total_adjustment, 0) + coalesce(home_form.total_momentum_adjustment, 0) - coalesce(away_form.total_momentum_adjustment, 0) + 52) / 400.0))))
         end - 0.5
@@ -177,3 +186,5 @@ left join vegas_lines vegas
     on p.week_number = vegas.week_number
     and p.home_team = vegas.home_team
     and p.visiting_team = vegas.visiting_team
+left join dynamic_weights dw
+    on p.week_number = dw.week_number

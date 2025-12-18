@@ -44,7 +44,10 @@ select
 from {{ ref("nfl_raw_schedule") }} as s
 left join {{ ref("nfl_ratings") }} v on v.team = s.vistm
 left join {{ ref("nfl_ratings") }} h on h.team = s.hometm
-left join {{ ref("nfl_elo_rollforward") }} r on r.game_id = s.id
+-- Join rollforward on team names (not game_id) because IDs don't match between schedule and results
+left join {{ ref("nfl_elo_rollforward") }} r
+    on r.home_team = s.hometm
+    and r.visiting_team = s.vistm
 left join {{ ref("nfl_bye_weeks") }} b on b.game_id = s.id
 group by
     all

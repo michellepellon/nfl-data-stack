@@ -111,7 +111,8 @@ def model(dbt, sess):
     """
     # Get configuration parameters
     home_adv = dbt.config.get("nfl_elo_offset", 52.0)
-    k_factor = dbt.config.get("elo_k_factor", 20.0)
+    base_k_factor = dbt.config.get("elo_k_factor", 20.0)
+    recency_weight = dbt.config.get("elo_recency_weight", 0.03)
     elo_scale = dbt.config.get("elo_scale", 400.0)
     mov_multiplier_base = dbt.config.get("mov_multiplier_base", 2.2)
     mov_multiplier_divisor = dbt.config.get("mov_multiplier_divisor", 0.001)
@@ -121,9 +122,9 @@ def model(dbt, sess):
     original_elo = dict(zip(team_ratings["team"], team_ratings["elo_rating"].astype(float)))
     working_elo = original_elo.copy()
 
-    # Load completed games in chronological order
+    # Load completed games in chronological order (include week for recency weighting)
     nfl_elo_latest = (dbt.ref("nfl_latest_results")
-        .project("game_id, visiting_team, home_team, winning_team, game_result, neutral_site, margin")
+        .project("game_id, week_number, visiting_team, home_team, winning_team, game_result, neutral_site, margin")
         .order("game_id")
     )
     nfl_elo_latest.execute()
@@ -142,6 +143,7 @@ def model(dbt, sess):
     # Prepare output
     columns = [
         "game_id",
+        "week",
         "visiting_team",
         "visiting_team_elo_rating",
         "home_team",
@@ -150,6 +152,7 @@ def model(dbt, sess):
         "elo_change",
         "margin",
         "contextual_adjustment",
+        "k_factor_used",
         "ingested_at"
     ]
     rows = []
@@ -158,7 +161,7 @@ def model(dbt, sess):
     ingested_at = datetime.now()
 
     # Process each game and update ELO ratings
-    for (game_id, vteam, hteam, winner, game_result, neutral_site, margin) in nfl_elo_latest.fetchall():
+    for (game_id, week, vteam, hteam, winner, game_result, neutral_site, margin) in nfl_elo_latest.fetchall():
         # Get current ELO ratings
         helo = working_elo.get(hteam)
         velo = working_elo.get(vteam)
@@ -168,6 +171,10 @@ def model(dbt, sess):
 
         # Get contextual adjustment for this game (default to 0 if not found)
         contextual_adj = contextual_dict.get(game_id, 0.0)
+
+        # Apply recency weighting: later weeks have higher K-factor
+        # Week 1: K = base_k, Week 14: K = base_k * (1 + 0.03 * 13) = base_k * 1.39
+        k_factor = base_k_factor * (1 + recency_weight * (week - 1))
 
         # Calculate ELO change with MOV multiplier and contextual adjustments
         elo_change = calc_elo_diff(
@@ -184,7 +191,7 @@ def model(dbt, sess):
         )
 
         # Store pre-game ratings, ELO change, and contextual adjustment
-        rows.append((game_id, vteam, velo, hteam, helo, winner, elo_change, margin, contextual_adj, ingested_at))
+        rows.append((game_id, week, vteam, velo, hteam, helo, winner, elo_change, margin, contextual_adj, k_factor, ingested_at))
 
         # Update working ELO ratings for next game
         # elo_change is from home team's perspective (negative = home gains)

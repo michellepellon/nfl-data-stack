@@ -1,7 +1,7 @@
 with
     cte_inner as (
         select
-            row_number() over (order by r.season, r.wk, r.winner, r.loser) as game_id,
+            s.id as game_id,  -- Use schedule's game_id for proper alignment
             r.wk as week_number,
             case
                 when r.at_symbol = '@' then r.loser  -- @ means winner is away, loser is home
@@ -25,12 +25,13 @@ with
             coalesce(s.neutral, 0) as neutral_site,
             r.winner_pts - r.loser_pts as margin
         from {{ ref("nfl_raw_results") }} r
-        left join {{ ref("nfl_raw_schedule") }} s
+        inner join {{ ref("nfl_raw_schedule") }} s  -- INNER join to ensure we have a valid game_id
             on s.week = r.wk
             and s.hometm = case when r.at_symbol = '@' then r.loser else r.winner end
             and s.vistm = case when r.at_symbol = '@' then r.winner else r.loser end
         where r.winner is not null and r.loser is not null
             and r.season = 2025  -- Only include current season to avoid game_id collisions
+            and r.game_date >= '2025-09-01'  -- Exclude preseason and last year's playoffs
     ),
     cte_outer as (
         select

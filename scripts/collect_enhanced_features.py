@@ -154,12 +154,15 @@ def map_position_group(position: str) -> str:
 def calculate_team_injury_scores(injuries: pl.DataFrame) -> pl.DataFrame:
     """Calculate team-level injury impact scores by week.
 
+    Separates QB injuries from non-QB injuries for more accurate ELO adjustments.
+    QB injuries have outsized impact (30-50 ELO points) compared to other positions.
+
     Args:
         injuries: DataFrame with columns: season, team, week, position,
                   report_status, etc.
 
     Returns:
-        DataFrame with columns: season, team, week, injury_score (0-100).
+        DataFrame with columns: season, team, week, injury_score, qb_injury_score.
     """
     # Filter to regular season injuries only
     injuries = injuries.filter(pl.col('game_type') == 'REG')
@@ -192,12 +195,24 @@ def calculate_team_injury_scores(injuries: pl.DataFrame) -> pl.DataFrame:
         (pl.col('position_weight') * pl.col('status_multiplier')).alias('weighted_impact')
     )
 
-    # Group by team-week and sum impacts (capped by position group)
-    # This is a simplified approach - proper implementation would cap per position group
+    # Group by team-week and sum impacts, separating QB from non-QB
     injury_scores = (
         injuries
         .group_by(['season', 'team', 'week'])
-        .agg(pl.col('weighted_impact').sum().alias('injury_score'))
+        .agg([
+            # Total injury score (all positions)
+            pl.col('weighted_impact').sum().alias('injury_score'),
+            # QB-specific injury score (for special handling)
+            pl.col('weighted_impact')
+              .filter(pl.col('position_group') == 'QB')
+              .sum()
+              .alias('qb_injury_score'),
+            # Non-QB injury score
+            pl.col('weighted_impact')
+              .filter(pl.col('position_group') != 'QB')
+              .sum()
+              .alias('non_qb_injury_score'),
+        ])
     )
 
     # Ensure season and week are int32 to match schedules
@@ -206,13 +221,17 @@ def calculate_team_injury_scores(injuries: pl.DataFrame) -> pl.DataFrame:
         pl.col('week').cast(pl.Int32),
     ])
 
-    # Cap injury scores at 100
-    injury_scores = injury_scores.with_columns(
+    # Cap injury scores at 100 (total) and 40 (QB)
+    injury_scores = injury_scores.with_columns([
         pl.when(pl.col('injury_score') > 100.0)
-        .then(100.0)
-        .otherwise(pl.col('injury_score'))
-        .alias('injury_score')
-    )
+          .then(100.0)
+          .otherwise(pl.col('injury_score'))
+          .alias('injury_score'),
+        pl.when(pl.col('qb_injury_score') > 40.0)
+          .then(40.0)
+          .otherwise(pl.col('qb_injury_score'))
+          .alias('qb_injury_score'),
+    ])
 
     return injury_scores
 
@@ -360,7 +379,11 @@ def collect_enhanced_features(
             left_on=['season', 'home_team', 'week'],
             right_on=['season', 'team', 'week'],
             how='left'
-        ).rename({'injury_score': 'home_injury_score'})
+        ).rename({
+            'injury_score': 'home_injury_score',
+            'qb_injury_score': 'home_qb_injury_score',
+            'non_qb_injury_score': 'home_non_qb_injury_score',
+        })
 
         # Join away team injury scores
         enhanced = enhanced.join(
@@ -368,24 +391,38 @@ def collect_enhanced_features(
             left_on=['season', 'away_team', 'week'],
             right_on=['season', 'team', 'week'],
             how='left'
-        ).rename({'injury_score': 'away_injury_score'})
+        ).rename({
+            'injury_score': 'away_injury_score',
+            'qb_injury_score': 'away_qb_injury_score',
+            'non_qb_injury_score': 'away_non_qb_injury_score',
+        })
 
         # Fill missing injury scores with 0 (no injuries reported)
         enhanced = enhanced.with_columns([
             pl.col('home_injury_score').fill_null(0.0),
             pl.col('away_injury_score').fill_null(0.0),
+            pl.col('home_qb_injury_score').fill_null(0.0),
+            pl.col('away_qb_injury_score').fill_null(0.0),
+            pl.col('home_non_qb_injury_score').fill_null(0.0),
+            pl.col('away_non_qb_injury_score').fill_null(0.0),
         ])
     else:
         # No injury data available - set to 0
         enhanced = enhanced.with_columns([
             pl.lit(0.0).alias('home_injury_score'),
             pl.lit(0.0).alias('away_injury_score'),
+            pl.lit(0.0).alias('home_qb_injury_score'),
+            pl.lit(0.0).alias('away_qb_injury_score'),
+            pl.lit(0.0).alias('home_non_qb_injury_score'),
+            pl.lit(0.0).alias('away_non_qb_injury_score'),
         ])
 
-    # Calculate injury differential
-    enhanced = enhanced.with_columns(
-        (pl.col('away_injury_score') - pl.col('home_injury_score')).alias('injury_diff')
-    )
+    # Calculate injury differentials (away - home, so positive = home advantage)
+    enhanced = enhanced.with_columns([
+        (pl.col('away_injury_score') - pl.col('home_injury_score')).alias('injury_diff'),
+        (pl.col('away_qb_injury_score') - pl.col('home_qb_injury_score')).alias('qb_injury_diff'),
+        (pl.col('away_non_qb_injury_score') - pl.col('home_non_qb_injury_score')).alias('non_qb_injury_diff'),
+    ])
 
     # Cast temp and wind back to Int32 to match original schema
     enhanced = enhanced.with_columns([

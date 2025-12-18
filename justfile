@@ -167,6 +167,80 @@ temporal-cv:
     @echo "Running temporal cross-validation..."
     .venv/bin/python scripts/temporal_cross_validation.py
 
+# Fit-Calibration-Temporal: Fit calibration model with walk-forward validation
+fit-calibration-temporal:
+    @echo "Fitting temporal calibration model..."
+    .venv/bin/python scripts/fit_calibration_temporal.py
+
+# Collect-Opening-Lines: Capture opening Vegas lines (run Monday/Tuesday)
+collect-opening-lines:
+    @echo "Collecting opening Vegas lines..."
+    .venv/bin/python scripts/collect_vegas_lines_snapshot.py opening
+
+# Collect-Closing-Lines: Capture closing Vegas lines (run pre-game)
+collect-closing-lines:
+    @echo "Collecting closing Vegas lines..."
+    .venv/bin/python scripts/collect_vegas_lines_snapshot.py closing
+
+# Collect-Lines-Interim: Capture interim Vegas lines snapshot
+collect-lines-interim:
+    @echo "Collecting interim Vegas lines snapshot..."
+    .venv/bin/python scripts/collect_vegas_lines_snapshot.py interim
+
+# Show-CLV: Display Closing Line Value analysis
+show-clv:
+    @echo "Analyzing Closing Line Value..."
+    .venv/bin/python -c "
+import polars as pl
+from pathlib import Path
+clv_path = Path('data/data_catalog/nfl_clv_analysis.parquet')
+if not clv_path.exists():
+    print('CLV data not found. Run \"just build\" first.')
+    exit(1)
+df = pl.read_parquet(clv_path)
+print('\\n' + '=' * 60)
+print('CLV Analysis Summary')
+print('=' * 60)
+with_clv = df.filter(pl.col('has_clv_data'))
+if len(with_clv) == 0:
+    print('\\nNo CLV data available yet.')
+    print('Run \"just collect-opening-lines\" and \"just collect-closing-lines\"')
+    exit(0)
+print(f'\\nGames with CLV data: {len(with_clv)}')
+print(f'Average Model CLV: {with_clv[\"model_clv\"].mean():.2%}')
+print(f'Average Ensemble CLV: {with_clv[\"ensemble_clv\"].mean():.2%}')
+print(f'\\nCLV by Week:')
+weekly = with_clv.group_by('week_number').agg([
+    pl.col('model_clv').mean().alias('avg_clv'),
+    pl.count().alias('n_games')
+]).sort('week_number')
+for row in weekly.iter_rows(named=True):
+    print(f'  Week {row[\"week_number\"]}: {row[\"avg_clv\"]:+.2%} ({row[\"n_games\"]} games)')
+"
+
+# Show-Weights: Display dynamic ensemble weights
+show-weights:
+    @echo "Analyzing dynamic ensemble weights..."
+    .venv/bin/python -c "
+import polars as pl
+from pathlib import Path
+weights_path = Path('data/data_catalog/nfl_dynamic_weights.parquet')
+if not weights_path.exists():
+    print('Weights data not found. Run \"just build\" first.')
+    exit(1)
+df = pl.read_parquet(weights_path)
+print('\\n' + '=' * 60)
+print('Dynamic Ensemble Weights')
+print('=' * 60)
+print(f'\\n{\"Week\":<8} {\"ELO\":<12} {\"Vegas\":<12} {\"Cold Start\":<12}')
+print('-' * 44)
+for row in df.sort('week_number').iter_rows(named=True):
+    cs = 'Yes' if row['is_cold_start'] else 'No'
+    print(f'{row[\"week_number\"]:<8} {row[\"elo_weight\"]:<12.2%} {row[\"vegas_weight\"]:<12.2%} {cs:<12}')
+print('\\nWeight bounds: 25% - 75%')
+print('Cold start uses 50/50 default for weeks 1-4')
+"
+
 # Web: Start local web server to view predictions webpage
 web:
     @echo "Starting web server at http://localhost:8080..."
