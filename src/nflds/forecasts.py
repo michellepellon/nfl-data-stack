@@ -75,3 +75,11 @@ def read_forecasts(path: Path) -> pl.DataFrame:
     if not Path(path).exists():
         raise FileNotFoundError(f"No forecasts at {path}. Run `python -m nflds build` first.")
     return validate(pl.read_parquet(path))
+
+
+def build_backtest(snapshot: pl.DataFrame, data_sha256: str) -> pl.DataFrame:
+    """Run every forecaster over the snapshot and return validated backtest rows."""
+    from nflds.forecasters import elo_plain, market
+
+    rows = pl.concat([market(snapshot), elo_plain(snapshot)])
+    return validate(stamp(rows, kind="backtest", data_sha256=data_sha256))

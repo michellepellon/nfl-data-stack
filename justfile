@@ -271,3 +271,13 @@ test-all:
 test-coverage:
     @echo "Running tests with coverage..."
     uv run pytest tests/ --cov --cov-report=term --cov-report=html
+
+# Field-Build: Write backtest forecast rows for every forecaster from the pinned snapshot
+field-build:
+    @echo "Building field forecasts..."
+    uv run python -m nflds build
+
+# Field-Score: Score forecasters on identical games (log loss bits, yards, Brier, paired gaps)
+field-score:
+    @echo "Scoring the field..."
+    uv run python -m nflds score
