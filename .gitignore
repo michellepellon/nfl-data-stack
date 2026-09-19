@@ -37,6 +37,9 @@ rill_project/.rill/
 data/data_catalog/*.parquet
 data/data_catalog/*.duckdb
 
+# Field forecasts are rebuilt from the pinned snapshot by `just field-build`
+data/forecasts/
+
 # Timestamped data backups
 data/**/*_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].csv
 
